@@ -1,6 +1,6 @@
 ---
 title: Indonesian Token Tax
-emoji: 🇮🇩
+emoji: 📊
 colorFrom: green
 colorTo: blue
 sdk: static
