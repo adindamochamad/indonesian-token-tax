@@ -7,15 +7,16 @@ import {
   renderCalculator,
   updateCalculator,
 } from "./leaderboard.js";
-import { renderHero } from "./hero.js";
+import { renderHero, mountHeroStrip } from "./hero.js";
 import { initTheme } from "./theme.js";
+import { initMotion } from "./motion.js";
 import {
   bindExampleChips,
   bindTryCounters,
   loadTryText,
   persistTryText,
   EXAMPLES,
-  renderComparisonTable,
+  renderRankedList,
   renderDetailRow,
 } from "./try.js";
 import "./styles.css";
@@ -41,9 +42,12 @@ async function boot() {
   bindTryCounters();
   bindExampleChips();
   paintLeaderboard();
+  await mountHeroStrip();
+  initMotion();
+
   const params = new URLSearchParams(location.search);
-  if (params.get("tab") === "try") {
-    activateTab("try");
+  if (params.get("run") === "1" || params.get("tab") === "try") {
+    document.getElementById("try")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   if (params.get("run") === "1") {
     await onTokenize();
@@ -51,15 +55,6 @@ async function boot() {
 }
 
 function bind() {
-  document.querySelectorAll(".tabs button").forEach((btn) => {
-    btn.addEventListener("click", () => activateTab(btn.dataset.panel));
-    btn.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" || ev.key === " ") {
-        ev.preventDefault();
-        activateTab(btn.dataset.panel);
-      }
-    });
-  });
   document.getElementById("slice-group")?.addEventListener("click", (ev) => {
     const btn = ev.target.closest("button[data-slice]");
     if (!btn) return;
@@ -98,21 +93,10 @@ function tokenizeShortcut(ev) {
   }
 }
 
-function activateTab(panel) {
-  document.querySelectorAll(".tabs button").forEach((b) => {
-    b.setAttribute("aria-selected", String(b.dataset.panel === panel));
-  });
-  document.querySelectorAll(".panel").forEach((p) => {
-    const on = p.id === panel;
-    p.classList.toggle("active", on);
-    p.hidden = !on;
-  });
-}
-
 function paintLeaderboard() {
   const rows = sliceRows(state.data, state.slice);
   document.getElementById("slice-caveat").textContent = sliceCaveat(state.slice);
-  document.getElementById("board-chart").innerHTML = renderChart(rows, state.data);
+  document.getElementById("board-chart").innerHTML = renderChart(rows);
   document.getElementById("board-table").innerHTML = renderTable(rows, state.sort);
   document.getElementById("calculator").innerHTML = renderCalculator(rows);
   const input = document.getElementById("en-tokens");
@@ -189,9 +173,10 @@ function paintTryResults({ rows, showEn }) {
       enN: r.enN,
       ratio: r.ratio,
     }));
+  const maxRatio = Math.max(...compData.map((r) => r.ratio ?? 0), 1.01);
   compare.innerHTML =
     compData.length > 0
-      ? `<h3 class="try-compare-title">Comparison</h3>${renderComparisonTable(compData)}`
+      ? `<h2 class="h3 try-compare-title">Comparison</h2>${renderRankedList(compData, maxRatio)}`
       : "";
   details.innerHTML = rows
     .map((r, i) =>

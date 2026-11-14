@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preload" href="%BASE_URL%fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="%BASE_URL%favicon.ico" sizes="48x48" />
     <title>Indonesian Token Tax</title>
@@ -28,24 +29,17 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="topbar">
+      <p class="site-title">Indonesian Token Tax</p>
       <button type="button" id="theme-toggle" class="theme-btn" aria-pressed="false">
         Dark mode
       </button>
     </header>
-    <main id="main">
+    <main id="main" class="page">
       <div id="hero"></div>
 
-      <nav class="tabs" role="tablist" aria-label="Main sections">
-        <button type="button" role="tab" id="tab-leaderboard" aria-selected="true" aria-controls="leaderboard" data-panel="leaderboard">
-          Leaderboard
-        </button>
-        <button type="button" role="tab" id="tab-try" aria-selected="false" aria-controls="try" data-panel="try">
-          Try your text
-        </button>
-      </nav>
-
-      <section id="leaderboard" class="panel active" role="tabpanel" aria-labelledby="tab-leaderboard">
-        <div class="slice-wrap">
+      <section id="leaderboard" class="sect reveal" aria-labelledby="board-label">
+        <p class="sect-num" id="board-label"><span class="sect-num-k">02</span> — Leaderboard</p>
+        <div class="slice-wrap block-quiet">
           <span class="slice-label" id="slice-label">Slice</span>
           <div class="segmented" id="slice-group" role="radiogroup" aria-labelledby="slice-label">
             <button type="button" role="radio" data-slice="flores" aria-checked="true">FLORES</button>
@@ -60,18 +54,21 @@
         <div id="calculator"></div>
       </section>
 
-      <section id="try" class="panel" role="tabpanel" aria-labelledby="tab-try">
-        <p class="muted privacy">
+      <section id="try" class="sect reveal" aria-labelledby="try-label">
+        <p class="sect-num" id="try-label"><span class="sect-num-k">03</span> — Try it</p>
+        <p class="muted privacy prose-narrow">
           This page runs entirely in your browser. Typed text is not sent anywhere. Tokenizer files load from
           huggingface.co on the first Tokenize click. No analytics.
         </p>
         <div class="chips" id="examples" aria-label="Example sentences"></div>
-        <label for="id-text">Indonesian</label>
-        <p class="field-meta muted" id="id-meta"></p>
-        <textarea id="id-text" autocomplete="off" spellcheck="false">Aku gk sempet ngerjain PR, nanti aja ya.</textarea>
-        <label for="en-text">English</label>
-        <p class="field-meta muted" id="en-meta"></p>
-        <textarea id="en-text" autocomplete="off" spellcheck="false">I didn't have time to do the homework; later, okay?</textarea>
+        <div class="try-fields">
+          <label for="id-text">Indonesian</label>
+          <p class="field-meta muted" id="id-meta"></p>
+          <textarea id="id-text" class="cmd-field" autocomplete="off" spellcheck="false" rows="3">Aku gk sempet ngerjain PR, nanti aja ya.</textarea>
+          <label for="en-text">English</label>
+          <p class="field-meta muted" id="en-meta"></p>
+          <textarea id="en-text" class="cmd-field" autocomplete="off" spellcheck="false" rows="3">I didn't have time to do the homework; later, okay?</textarea>
+        </div>
         <div class="try-actions">
           <button class="primary" id="tokenize" type="button">Tokenize</button>
           <label class="toggle-en"><input type="checkbox" id="show-en" /> Show English spans</label>
@@ -80,18 +77,15 @@
         <div id="try-out"></div>
       </section>
 
-      <section id="method" class="prose">
-        <h2>Method</h2>
+      <section id="method" class="sect prose reveal" aria-labelledby="method-label">
+        <p class="sect-num" id="method-label"><span class="sect-num-k">04</span> — Method</p>
         <p>
           Each pair is encoded as raw text with <code>add_special_tokens=false</code> (no chat template).
           The tax is <code>sum(Indonesian tokens) / sum(English tokens)</code>. A bootstrap 95% CI resamples pairs
           1000 times with seed 42. Leaderboard numbers are copied from the Python pipeline’s
           <code>results/results.json</code>.
         </p>
-      </section>
-
-      <section id="limitations" class="prose">
-        <h2>Limitations</h2>
+        <h2 class="h3" id="limitations">Limitations</h2>
         <ul>
           <li>FLORES-200 is professionally translated, news-like, formal. Chat and slang are only the small synthetic slices.</li>
           <li>Synthetic slices are small; their CIs are wide. Treat them as illustrations.</li>
@@ -101,16 +95,24 @@
       </section>
 
       <footer class="site-footer">
-        <p>
-          <a href="#method">Method</a> · <a href="#limitations">Limitations</a> ·
-          <a href="https://github.com/adindamochamad/indonesian-token-tax" rel="noopener noreferrer">
-            GitHub source
-          </a>
-        </p>
-        <p class="muted">Built with transformers.js + js-tiktoken</p>
-        <p>
-          <a href="https://adindamochamad.com" rel="noopener noreferrer">Adinda Panca Mochamad</a>
-        </p>
+        <div class="footer-cols">
+          <div>
+            <p class="footer-head">On this page</p>
+            <p><a href="#method">Method</a> · <a href="#limitations">Limitations</a></p>
+            <p>
+              <a href="https://github.com/adindamochamad/indonesian-token-tax" rel="noopener noreferrer">
+                GitHub source
+              </a>
+            </p>
+          </div>
+          <div>
+            <p class="footer-head">Author</p>
+            <p>
+              <a href="https://adindamochamad.com" rel="noopener noreferrer">Adinda Panca Mochamad</a>
+            </p>
+            <p class="muted small">Built with transformers.js + js-tiktoken</p>
+          </div>
+        </div>
       </footer>
     </main>
     <script type="module" src="/src/main.js"></script>

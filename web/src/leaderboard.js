@@ -42,40 +42,37 @@ export function sliceCaveat(sliceKey) {
   return SLICE_CAVEATS[sliceKey] ?? "";
 }
 
-function barColor(i, n) {
-  const t = n <= 1 ? 0 : i / (n - 1);
-  const hue = 210 - t * 175;
-  const light = document.documentElement.dataset.theme === "dark" ? 38 : 46;
-  const sat = 62 - t * 18;
-  return `hsl(${hue} ${sat}% ${light}%)`;
-}
-
-export function renderChart(rows, data) {
+export function renderChart(rows) {
   const width = 920;
-  const rowH = 40;
-  const left = 148;
-  const right = 56;
-  const top = 36;
-  const bottom = 28;
+  const rowH = 44;
+  const left = 8;
+  const labelW = 152;
+  const right = 72;
+  const top = 40;
+  const bottom = 32;
   const height = top + rows.length * rowH + bottom;
-  const plotW = width - left - right;
-  const maxX = Math.max(2, ...rows.map((r) => r.displayHi || r.displayRatio || 0), 2);
-  const x = (v) => left + (v / maxX) * plotW;
-  const grid = TICKS.filter((t) => t <= maxX + 0.01)
-    .map((t) => {
-      const px = x(t);
-      return `<line class="chart-grid" x1="${px}" x2="${px}" y1="${top - 8}" y2="${height - bottom}" />
-        <text class="chart-tick" x="${px}" y="${top - 12}" text-anchor="middle">${t.toFixed(2)}</text>`;
-    })
-    .join("");
+  const plotLeft = left + labelW;
+  const plotW = width - plotLeft - right;
+  const maxX = 2.0;
+  const x = (v) => plotLeft + (Math.min(maxX, Math.max(0, v)) / maxX) * plotW;
+  const bestTok = rows[0]?.tokenizer;
+  const worstTok = rows[rows.length - 1]?.tokenizer;
+
+  const grid = TICKS.map((t) => {
+    const px = x(t);
+    return `<line class="chart-grid" x1="${px}" x2="${px}" y1="${top - 4}" y2="${height - bottom}" />
+      <text class="chart-tick" x="${px}" y="${top - 14}" text-anchor="middle">${t.toFixed(2)}</text>`;
+  }).join("");
+
   const parityX = x(1);
-  const bars = rows
+  const series = rows
     .map((row, i) => {
-      const y = top + i * rowH + 10;
-      const x1 = x(row.displayRatio);
+      const cy = top + i * rowH + rowH / 2;
       const lo = x(row.displayLo);
       const hi = x(row.displayHi);
-      const fill = barColor(i, rows.length);
+      const dot = x(row.displayRatio);
+      const accent = row.tokenizer === bestTok || row.tokenizer === worstTok;
+      const rowClass = accent ? "chart-row chart-row-accent" : "chart-row";
       const tip = [
         row.tokenizer,
         `revision ${row.revision}`,
@@ -84,25 +81,26 @@ export function renderChart(rows, data) {
         `word ratio ${fmt(row.displayWord, 3)}`,
         `extra / 1M EN ${fmtInt(row.displayExtra)}`,
       ].join(" · ");
-      return `<g class="chart-row" tabindex="0" role="graphics-symbol" aria-label="${escapeHtml(tip)}">
+      return `<g class="${rowClass}" tabindex="0" role="graphics-symbol" aria-label="${escapeHtml(tip)}">
         <title>${escapeHtml(tip)}</title>
-        <text class="chart-label" x="${left - 8}" y="${y + 12}" text-anchor="end">${escapeHtml(row.shortName)}</text>
-        <rect class="chart-bar" x="${x(0)}" y="${y}" width="${Math.max(2, x1 - x(0))}" height="18" rx="2" fill="${fill}"/>
-        <line x1="${lo}" x2="${hi}" y1="${y + 9}" y2="${y + 9}" class="chart-ci"/>
-        <line x1="${lo}" x2="${lo}" y1="${y + 4}" y2="${y + 14}" class="chart-ci"/>
-        <line x1="${hi}" x2="${hi}" y1="${y + 4}" y2="${y + 14}" class="chart-ci"/>
-        <text class="chart-value" x="${x1 + 6}" y="${y + 13}">${fmtRatio(row.displayRatio, 2)}</text>
+        <text class="chart-label" x="${plotLeft - 10}" y="${cy + 4}" text-anchor="end">${escapeHtml(row.shortName)}</text>
+        <line x1="${lo}" x2="${hi}" y1="${cy}" y2="${cy}" class="chart-whisker"/>
+        <line x1="${lo}" x2="${lo}" y1="${cy - 6}" y2="${cy + 6}" class="chart-cap"/>
+        <line x1="${hi}" x2="${hi}" y1="${cy - 6}" y2="${cy + 6}" class="chart-cap"/>
+        <circle class="chart-dot" cx="${dot}" cy="${cy}" r="5"/>
+        <text class="chart-value num" x="${width - right + 6}" y="${cy + 4}">${fmtRatio(row.displayRatio, 2)}</text>
       </g>`;
     })
     .join("");
+
   return `<figure class="chart-wrap">
     <svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="chart-title chart-desc">
       <title id="chart-title">Indonesian over English token ratio by tokenizer</title>
-      <desc id="chart-desc">Horizontal bars with 95% confidence intervals. Parity at 1.0.</desc>
+      <desc id="chart-desc">Dot-and-whisker plot with 95% confidence intervals. Dashed line at 1.0 is same as English.</desc>
       ${grid}
-      <line class="chart-parity" x1="${parityX}" x2="${parityX}" y1="${top - 8}" y2="${height - bottom}"/>
-      <text class="chart-parity-label" x="${parityX + 4}" y="${height - 6}">parity = 1.0</text>
-      ${bars}
+      <line class="chart-parity" x1="${parityX}" x2="${parityX}" y1="${top - 4}" y2="${height - bottom}" stroke-dasharray="4 3"/>
+      <text class="chart-parity-label" x="${parityX + 4}" y="${height - 10}">same as English</text>
+      ${series}
     </svg>
     <p class="sr-only">See the sortable table below for the same numbers.</p>
   </figure>`;
@@ -151,29 +149,12 @@ export function renderTable(rows, sort) {
     </tr>`;
     })
     .join("");
-  const cards = sorted
-    .map((row) => {
-      const tier =
-        row.tokenizer === bestTok ? "best" : row.tokenizer === worstTok ? "worst" : "";
-      return `<article class="board-card ${tier}">
-        <h3>${escapeHtml(row.shortName)}</h3>
-        <p class="muted small">${escapeHtml(row.tokenizer)}</p>
-        <dl>
-          <div><dt>ID/EN tokens</dt><dd>${fmtRatio(row.displayRatio, 2)}</dd></div>
-          <div><dt>95% CI</dt><dd>${fmt(row.displayLo, 3)}–${fmt(row.displayHi, 3)}</dd></div>
-          <div><dt>ID/EN words</dt><dd>${fmt(row.displayWord, 3)}</dd></div>
-          <div><dt>Extra / 1M EN</dt><dd>${fmtInt(row.displayExtra)}</dd></div>
-        </dl>
-      </article>`;
-    })
-    .join("");
   return `<div class="table-scroll" role="region" aria-label="Tokenizer leaderboard table">
     <table class="board-table">
       <thead><tr>${head}</tr></thead>
       <tbody>${body}</tbody>
     </table>
-  </div>
-  <div class="board-cards" aria-label="Tokenizer leaderboard cards">${cards}</div>`;
+  </div>`;
 }
 
 export function renderCalculator(rows) {
@@ -185,8 +166,8 @@ export function renderCalculator(rows) {
       </tr>`,
     )
     .join("");
-  return `<section class="calculator" aria-labelledby="calc-title">
-    <h2 id="calc-title">What does this mean?</h2>
+  return `<section class="calculator block-quiet" aria-labelledby="calc-title">
+    <h2 id="calc-title" class="h3">What does this mean?</h2>
     <p class="muted">Token multipliers only — not dollar prices.</p>
     <label for="en-tokens">If English uses this many tokens…</label>
     <input type="number" id="en-tokens" min="0" step="1000" value="1000000" inputmode="numeric" />

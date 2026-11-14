@@ -95,22 +95,27 @@ export function renderComparisonRow(spec, idN, enN) {
   };
 }
 
-export function renderComparisonTable(rows) {
+export function renderRankedList(rows, maxRatio) {
   const sorted = [...rows].sort((a, b) => (a.ratio ?? 0) - (b.ratio ?? 0));
-  const body = sorted
-    .map(
-      (r) => `<tr>
-        <td>${r.shortName}</td>
-        <td class="num">${r.idN}</td>
-        <td class="num">${r.enN ?? "—"}</td>
-        <td class="num">${r.ratio == null ? "—" : fmtRatio(r.ratio, 2)}</td>
-      </tr>`,
-    )
+  const best = sorted[0]?.ratio;
+  const worst = sorted[sorted.length - 1]?.ratio;
+  const items = sorted
+    .map((r) => {
+      const pct = r.ratio == null ? 0 : (r.ratio / maxRatio) * 100;
+      const tier =
+        r.ratio != null && r.ratio === best
+          ? "rank-best"
+          : r.ratio != null && r.ratio === worst
+            ? "rank-worst"
+            : "";
+      return `<li class="rank-row ${tier}">
+        <span class="rank-name">${r.shortName}</span>
+        <span class="rank-bar" role="presentation"><span class="rank-bar-fill" style="width:${pct.toFixed(1)}%"></span></span>
+        <span class="rank-nums num mono"><span class="rank-id">${r.idN}</span> · <span class="rank-en">${r.enN ?? "—"}</span> · <span class="rank-ratio">${r.ratio == null ? "—" : fmtRatio(r.ratio, 2)}</span></span>
+      </li>`;
+    })
     .join("");
-  return `<table class="try-compare">
-    <thead><tr><th>Tokenizer</th><th class="num">ID</th><th class="num">EN</th><th class="num">ID/EN</th></tr></thead>
-    <tbody>${body}</tbody>
-  </table>`;
+  return `<ol class="try-ranked" aria-label="Token counts ranked by ID/EN ratio">${items}</ol>`;
 }
 
 export function renderDetailRow(spec, state, idPieces, enPieces, showEn, open) {
