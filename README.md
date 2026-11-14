@@ -109,6 +109,25 @@ python app.py
 
 CLI: `python -m src.measure --slice {flores,domain,informal,all} --out results`
 
+## Static web app
+
+A client-side Vite app in `web/` reads committed `results/results.json` for the leaderboard and tokenizes in the browser (`@huggingface/transformers` 4.2.0 and `js-tiktoken` 1.0.21). Typed text stays on the device. Tokenizer files are fetched from huggingface.co on the first Tokenize click.
+
+```bash
+cd web
+npm ci
+npm run build
+```
+
+Parity with Python on 50 FLORES Indonesian + 50 English sentences (exact token counts, `add_special_tokens=false`): **7/7 match**.
+
+```bash
+python scripts/export_parity_fixture.py   # regenerates web/fixtures/parity.json
+node scripts/parity.mjs
+```
+
+Serve the build with `cd web && npm run preview`. Optional Gradio: `python app.py`.
+
 ## License
 
 Code in this repository is Apache-2.0. FLORES text remains under CC-BY-SA-4.0 of the original FLORES-200 project. Synthetic JSONL files are original to this repo and Apache-2.0.
