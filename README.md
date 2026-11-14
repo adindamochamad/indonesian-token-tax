@@ -3,9 +3,9 @@ title: Indonesian Token Tax
 emoji: 🇮🇩
 colorFrom: green
 colorTo: blue
-sdk: gradio
-sdk_version: 6.32.0
-app_file: app.py
+sdk: static
+app_build_command: cd web && npm ci && npm run build
+app_file: web/dist/index.html
 pinned: false
 license: apache-2.0
 ---
