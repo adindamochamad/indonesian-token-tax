@@ -3,8 +3,8 @@ import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const outDir = resolve(root, "web/screenshots");
+const defaultOut = "/Users/mac/Development/indonesian-token-tax/web/screenshots";
+const outDir = process.argv[2] ? resolve(process.argv[2]) : defaultOut;
 mkdirSync(outDir, { recursive: true });
 
 const chrome =

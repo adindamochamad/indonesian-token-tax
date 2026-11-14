@@ -1,5 +1,5 @@
-import { fmtRatio, escapeHtml } from "./format.js";
-import { shortNameFor, revisionFor } from "./specs.js";
+import { fmtRatio, fmtInt, escapeHtml } from "./format.js";
+import { shortNameFor } from "./specs.js";
 import { sliceRows } from "./leaderboard.js";
 
 export function floresRange(data) {
@@ -53,7 +53,7 @@ export function renderHero(data) {
           <strong>${escapeHtml(shortNameFor(priciest.tokenizer))}</strong>
           (${fmtRatio(priciest.displayRatio, 2)}) the most.
         </p>
-        <p class="muted small">${escapeHtml(cheapest.tokenizer)} · ${escapeHtml(revisionFor(data, cheapest.tokenizer))}</p>
+        <p class="muted small">${fmtInt(cheapest.displayExtra)} vs ${fmtInt(priciest.displayExtra)} extra tokens per 1M EN</p>
       </article>
       <article class="card">
         <h2>Qwen2.5 = Sailor2 vocab</h2>
