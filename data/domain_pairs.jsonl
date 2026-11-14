@@ -1,0 +1,30 @@
+{"id_text": "Hai, kamu sudah makan belum?", "en_text": "Hey, have you eaten yet?", "domain": "chat", "synthetic": true}
+{"id_text": "Nanti malam kita video call ya, jam delapan.", "en_text": "Let's video call tonight at eight.", "domain": "chat", "synthetic": true}
+{"id_text": "Aku kirim lokasi restonya di chat, cek ya.", "en_text": "I'll send the restaurant location in the chat, please check.", "domain": "chat", "synthetic": true}
+{"id_text": "Maaf telat balas, rapatnya baru selesai.", "en_text": "Sorry for the late reply, the meeting just ended.", "domain": "chat", "synthetic": true}
+{"id_text": "Boleh minta file presentasinya versi terbaru?", "en_text": "Could you send the latest version of the presentation file?", "domain": "chat", "synthetic": true}
+{"id_text": "Oke, aku tandai kalender untuk hari Jumat.", "en_text": "Okay, I'll mark Friday on the calendar.", "domain": "chat", "synthetic": true}
+{"id_text": "Jangan lupa bawa charger, baterai laptopku hampir habis.", "en_text": "Don't forget to bring a charger; my laptop battery is almost empty.", "domain": "chat", "synthetic": true}
+{"id_text": "Kamu jadi ikut nonton film minggu ini?", "en_text": "Are you still joining the movie this weekend?", "domain": "chat", "synthetic": true}
+{"id_text": "Terima kasih telah menghubungi layanan pelanggan kami.", "en_text": "Thank you for contacting our customer support.", "domain": "customer_support", "synthetic": true}
+{"id_text": "Nomor pesanan Anda adalah INV-20491. Mohon simpan sebagai referensi.", "en_text": "Your order number is INV-20491. Please keep it for reference.", "domain": "customer_support", "synthetic": true}
+{"id_text": "Paket Anda sedang dalam pengiriman dan diperkirakan tiba hari Kamis.", "en_text": "Your package is in transit and is expected to arrive on Thursday.", "domain": "customer_support", "synthetic": true}
+{"id_text": "Jika barang rusak, unggah foto kemasan dan produk melalui tautan ini.", "en_text": "If the item is damaged, upload photos of the packaging and product via this link.", "domain": "customer_support", "synthetic": true}
+{"id_text": "Kami telah menerbitkan kredit toko sebesar Rp150.000 ke akun Anda.", "en_text": "We have issued store credit of IDR 150,000 to your account.", "domain": "customer_support", "synthetic": true}
+{"id_text": "Kata sandi baru akan kedaluwarsa dalam 24 jam.", "en_text": "The new password will expire in 24 hours.", "domain": "customer_support", "synthetic": true}
+{"id_text": "Mohon maaf atas gangguan pada aplikasi pagi ini. Layanan sudah pulih.", "en_text": "We apologize for the app outage this morning. The service has been restored.", "domain": "customer_support", "synthetic": true}
+{"id_text": "Untuk membatalkan langganan, buka Pengaturan, lalu pilih Kelola paket.", "en_text": "To cancel your subscription, open Settings, then choose Manage plan.", "domain": "customer_support", "synthetic": true}
+{"id_text": "# Hitung pajak: jumlah * tarif, lalu bulatkan ke rupiah terdekat.", "en_text": "# Compute tax: amount * rate, then round to the nearest rupiah.", "domain": "code_comment", "synthetic": true}
+{"id_text": "# Jangan kirim token ke log. Masking dulu sebelum menulis ke berkas.", "en_text": "# Do not send tokens to logs. Mask them before writing to the file.", "domain": "code_comment", "synthetic": true}
+{"id_text": "# Ambil baris CSV, pecah pada koma, lalu buang spasi di ujung.", "en_text": "# Read a CSV row, split on commas, then strip trailing spaces.", "domain": "code_comment", "synthetic": true}
+{"id_text": "# Jika status 429, tunggu backoff eksponensial lalu coba lagi.", "en_text": "# If the status is 429, wait with exponential backoff and retry.", "domain": "code_comment", "synthetic": true}
+{"id_text": "# Fungsi ini mengembalikan None jika kunci tidak ditemukan.", "en_text": "# This function returns None if the key is not found.", "domain": "code_comment", "synthetic": true}
+{"id_text": "# Simpan zona waktu sebagai Asia/Jakarta, bukan offset mentah.", "en_text": "# Store the time zone as Asia/Jakarta, not a raw offset.", "domain": "code_comment", "synthetic": true}
+{"id_text": "# Uji kasus kosong: string \"\" harus menghasilkan nol token.", "en_text": "# Empty-case test: the string \"\" must yield zero tokens.", "domain": "code_comment", "synthetic": true}
+{"id_text": "Dengan hormat, saya mengajukan permohonan cuti tahunan pada 20–22 November 2026.", "en_text": "Respectfully, I am requesting annual leave from 20–22 November 2026.", "domain": "formal_letter", "synthetic": true}
+{"id_text": "Bersama surat ini kami lampirkan laporan keuangan kuartal ketiga.", "en_text": "Together with this letter we enclose the third-quarter financial report.", "domain": "formal_letter", "synthetic": true}
+{"id_text": "Mohon kesediaan Bapak/Ibu untuk meninjau draf perjanjian terlampir.", "en_text": "We kindly ask you to review the attached draft agreement.", "domain": "formal_letter", "synthetic": true}
+{"id_text": "Apabila ada pertanyaan, silakan menghubungi kami pada jam kerja.", "en_text": "If you have any questions, please contact us during business hours.", "domain": "formal_letter", "synthetic": true}
+{"id_text": "Demikian pemberitahuan ini kami sampaikan. Atas perhatiannya, kami ucapkan terima kasih.", "en_text": "This is to inform you as stated above. We thank you for your attention.", "domain": "formal_letter", "synthetic": true}
+{"id_text": "Kami mengundang Bapak/Ibu hadir dalam rapat pemegang saham pada pukul 10.00 WIB.", "en_text": "We invite you to attend the shareholders' meeting at 10:00 a.m. Western Indonesia Time.", "domain": "formal_letter", "synthetic": true}
+{"id_text": "Surat ini berlaku sebagai konfirmasi resmi penerimaan proposal Anda.", "en_text": "This letter serves as official confirmation that your proposal has been received.", "domain": "formal_letter", "synthetic": true}
