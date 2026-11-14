@@ -4,77 +4,113 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <title>Indonesian Token Tax</title>
-    <meta name="description" content="How many more tokens Indonesian text uses than English, measured in your browser." />
+    <meta
+      name="description"
+      content="Compare how many more tokens Indonesian text uses than English across seven LLM tokenizers. Runs in your browser; your text stays on your device."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Indonesian Token Tax" />
+    <meta
+      property="og:description"
+      content="Indonesian uses fewer words than English on FLORES-200, yet still costs more tokens. Measured in the browser."
+    />
+    <meta property="og:image" content="/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Indonesian Token Tax" />
+    <meta
+      name="twitter:description"
+      content="Token multipliers for Indonesian vs English on popular LLM tokenizers."
+    />
+    <meta name="twitter:image" content="/og.png" />
   </head>
   <body>
-    <main>
-      <h1>Indonesian Token Tax</h1>
-      <p>
-        How many more tokens Indonesian text uses than English, across popular LLM tokenizers.
-        Ratios are <strong>token multipliers</strong>, not prices.
-      </p>
-      <p class="muted">
-        This page runs entirely in your browser. Typed text is not sent anywhere.
-        Tokenizer files are fetched from huggingface.co (and tiktoken ranks are bundled).
-        No analytics.
-      </p>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="topbar">
+      <button type="button" id="theme-toggle" class="theme-btn" aria-pressed="false">
+        Dark mode
+      </button>
+    </header>
+    <main id="main">
+      <div id="hero"></div>
 
-      <h2>Key findings</h2>
-      <p>
-        On FLORES-200 devtest, Indonesian has a word ratio of about 0.90 versus English, so the
-        Indonesian side is not the longer text. The token ratio on that slice still runs about
-        1.25 (<code>o200k_base</code>) to 1.84 (Mistral-7B-Instruct-v0.3).
-        Qwen2.5-7B-Instruct and Sailor2-8B share an identical <code>vocab.json</code> and
-        produced identical counts here; their <code>tokenizer.json</code> hashes differ.
-      </p>
+      <nav class="tabs" role="tablist" aria-label="Main sections">
+        <button type="button" role="tab" id="tab-leaderboard" aria-selected="true" aria-controls="leaderboard" data-panel="leaderboard">
+          Leaderboard
+        </button>
+        <button type="button" role="tab" id="tab-try" aria-selected="false" aria-controls="try" data-panel="try">
+          Try your text
+        </button>
+      </nav>
 
-      <div class="tabs" role="tablist">
-        <button type="button" role="tab" aria-selected="true" data-panel="leaderboard">Leaderboard</button>
-        <button type="button" role="tab" aria-selected="false" data-panel="try">Try your text</button>
-      </div>
-
-      <section id="leaderboard" class="panel active">
-        <label for="slice">Slice</label>
-        <select id="slice">
-          <option value="flores">FLORES-200 (formal/news-like)</option>
-          <option value="domain">Domain (synthetic)</option>
-          <option value="informal">Informal, full English gloss (synthetic)</option>
-          <option value="informal_matched">Informal, length-matched English (synthetic)</option>
-        </select>
+      <section id="leaderboard" class="panel active" role="tabpanel" aria-labelledby="tab-leaderboard">
+        <div class="slice-wrap">
+          <span class="slice-label" id="slice-label">Slice</span>
+          <div class="segmented" id="slice-group" role="radiogroup" aria-labelledby="slice-label">
+            <button type="button" role="radio" data-slice="flores" aria-checked="true">FLORES</button>
+            <button type="button" role="radio" data-slice="domain" aria-checked="false">Domain</button>
+            <button type="button" role="radio" data-slice="informal" aria-checked="false">Informal</button>
+            <button type="button" role="radio" data-slice="informal_matched" aria-checked="false">Informal length-matched</button>
+          </div>
+        </div>
+        <p class="slice-caveat muted" id="slice-caveat"></p>
         <div id="board-chart"></div>
-        <div id="board-table" class="table-wrap"></div>
+        <div id="board-table"></div>
+        <div id="calculator"></div>
       </section>
 
-      <section id="try" class="panel">
+      <section id="try" class="panel" role="tabpanel" aria-labelledby="tab-try">
+        <p class="muted privacy">
+          This page runs entirely in your browser. Typed text is not sent anywhere. Tokenizer files load from
+          huggingface.co on the first Tokenize click. No analytics.
+        </p>
+        <div class="chips" id="examples" aria-label="Example sentences"></div>
         <label for="id-text">Indonesian</label>
-        <textarea id="id-text">Aku gk sempet ngerjain PR, nanti aja ya.</textarea>
-        <label for="en-text">English (optional)</label>
-        <textarea id="en-text">I didn't have time to do the homework; later, okay?</textarea>
-        <p><button class="primary" id="tokenize" type="button">Tokenize</button></p>
-        <p class="muted">Tokenizers load on the first click (tokenizer files only, no model weights).</p>
+        <p class="field-meta muted" id="id-meta"></p>
+        <textarea id="id-text" autocomplete="off" spellcheck="false">Aku gk sempet ngerjain PR, nanti aja ya.</textarea>
+        <label for="en-text">English</label>
+        <p class="field-meta muted" id="en-meta"></p>
+        <textarea id="en-text" autocomplete="off" spellcheck="false">I didn't have time to do the homework; later, okay?</textarea>
+        <div class="try-actions">
+          <button class="primary" id="tokenize" type="button">Tokenize</button>
+          <label class="toggle-en"><input type="checkbox" id="show-en" /> Show English spans</label>
+        </div>
+        <p class="muted small">Tokenizers load on the first click (tokenizer files only, no model weights). Cmd/Ctrl+Enter to tokenize.</p>
         <div id="try-out"></div>
       </section>
 
-      <h2>Method</h2>
-      <p>
-        Each pair is encoded as raw text with <code>add_special_tokens=false</code> (no chat template).
-        The tax is <code>sum(Indonesian tokens) / sum(English tokens)</code>. A bootstrap 95% CI
-        resamples pairs 1000 times with seed 42. Leaderboard numbers are copied from the Python
-        pipeline’s <code>results/results.json</code>.
-      </p>
+      <section id="method" class="prose">
+        <h2>Method</h2>
+        <p>
+          Each pair is encoded as raw text with <code>add_special_tokens=false</code> (no chat template).
+          The tax is <code>sum(Indonesian tokens) / sum(English tokens)</code>. A bootstrap 95% CI resamples pairs
+          1000 times with seed 42. Leaderboard numbers are copied from the Python pipeline’s
+          <code>results/results.json</code>.
+        </p>
+      </section>
 
-      <h2>Limitations</h2>
-      <ul>
-        <li>FLORES-200 is professionally translated, news-like, formal. Chat and slang are only the small synthetic slices.</li>
-        <li>Synthetic slices are small; their CIs are wide. Treat them as illustrations.</li>
-        <li>A ratio above 1 can come from the tokenizer or from Indonesian using more words than the English reference. Check the word-ratio column.</li>
-        <li>This page does not evaluate generation quality.</li>
-      </ul>
+      <section id="limitations" class="prose">
+        <h2>Limitations</h2>
+        <ul>
+          <li>FLORES-200 is professionally translated, news-like, formal. Chat and slang are only the small synthetic slices.</li>
+          <li>Synthetic slices are small; their CIs are wide. Treat them as illustrations.</li>
+          <li>A ratio above 1 can come from the tokenizer or from Indonesian using more words than the English reference. Check the word-ratio column.</li>
+          <li>This page does not evaluate generation quality.</li>
+        </ul>
+      </section>
 
-      <footer>
-        Measurement source is the Python pipeline in this repository.
-        Optional local Gradio tool: <code>python app.py</code>.
+      <footer class="site-footer">
+        <p>
+          <a href="#method">Method</a> · <a href="#limitations">Limitations</a> ·
+          <a href="https://github.com/adindamochamad/indonesian-token-tax" rel="noopener noreferrer">
+            GitHub source (not published yet)
+          </a>
+        </p>
+        <p class="muted">Built with transformers.js + js-tiktoken</p>
+        <p>
+          <a href="https://adindamochamad.com" rel="noopener noreferrer">Adinda Panca Mochamad</a>
+        </p>
       </footer>
     </main>
     <script type="module" src="/src/main.js"></script>

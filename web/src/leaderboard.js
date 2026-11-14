@@ -1,4 +1,17 @@
-const PALETTE = ["#cfe8ff", "#ffe3c2", "#d4f0d4", "#f3d4f0", "#fff3b0", "#e0d4ff"];
+import { fmt, fmtRatio, fmtInt, escapeHtml } from "./format.js";
+import { shortNameFor, revisionFor } from "./specs.js";
+
+const SLICE_CAVEATS = {
+  flores: "Formal, professionally translated news-like text (FLORES-200 devtest).",
+  domain:
+    "Synthetic slice (n≈30): chat, support, code comments, formal letters. Small sample — illustration only.",
+  informal:
+    "Synthetic slang (n≈40): fuller English gloss is often longer than Indonesian, so token ratios can sit near parity.",
+  informal_matched:
+    "Same informal pairs with length-matched English (word count within 1). Still only 40 pairs — wide CIs.",
+};
+
+const TICKS = [1.0, 1.25, 1.5, 1.75, 2.0];
 
 export function sliceRows(data, sliceKey) {
   const matched = sliceKey === "informal_matched";
@@ -18,89 +31,185 @@ export function sliceRows(data, sliceKey) {
         displayHi: hi,
         displayWord: word,
         displayExtra: extra,
+        shortName: shortNameFor(row.tokenizer),
+        revision: revisionFor(data, row.tokenizer),
       };
     })
     .sort((a, b) => a.displayRatio - b.displayRatio);
 }
 
-export function fmt(n, digits = 3) {
-  if (n == null || Number.isNaN(n)) return "—";
-  return Number(n).toFixed(digits);
+export function sliceCaveat(sliceKey) {
+  return SLICE_CAVEATS[sliceKey] ?? "";
 }
 
-export function renderTable(rows) {
-  const body = rows
-    .map(
-      (row) => `<tr>
-      <td>${escapeHtml(row.tokenizer)}</td>
-      <td class="num">${fmt(row.displayRatio)}</td>
-      <td class="num">${fmt(row.displayLo)}–${fmt(row.displayHi)}</td>
-      <td class="num">${fmt(row.displayWord)}</td>
-      <td class="num">${fmt(row.displayExtra, 0)}</td>
-    </tr>`,
-    )
-    .join("");
-  return `<table>
-    <thead><tr>
-      <th>Tokenizer</th><th class="num">ID/EN tokens</th><th class="num">95% CI</th>
-      <th class="num">ID/EN words</th><th class="num">Extra / 1M EN</th>
-    </tr></thead>
-    <tbody>${body}</tbody>
-  </table>`;
+function barColor(i, n) {
+  const t = n <= 1 ? 0 : i / (n - 1);
+  const hue = 210 - t * 175;
+  const light = document.documentElement.dataset.theme === "dark" ? 38 : 46;
+  const sat = 62 - t * 18;
+  return `hsl(${hue} ${sat}% ${light}%)`;
 }
 
-export function renderChart(rows) {
-  const width = 900;
-  const rowH = 36;
-  const left = 280;
-  const right = 36;
-  const top = 16;
-  const height = top + rows.length * rowH + 28;
+export function renderChart(rows, data) {
+  const width = 920;
+  const rowH = 40;
+  const left = 148;
+  const right = 56;
+  const top = 36;
+  const bottom = 28;
+  const height = top + rows.length * rowH + bottom;
   const plotW = width - left - right;
-  const maxX = Math.max(2, ...rows.map((r) => r.displayHi || r.displayRatio || 0));
+  const maxX = Math.max(2, ...rows.map((r) => r.displayHi || r.displayRatio || 0), 2);
   const x = (v) => left + (v / maxX) * plotW;
-  const bars = rows
-    .map((row, i) => {
-      const y = top + i * rowH + 8;
-      const x0 = x(0);
-      const x1 = x(row.displayRatio);
-      const lo = x(row.displayLo);
-      const hi = x(row.displayHi);
-      return `<g>
-        <text x="${left - 10}" y="${y + 12}" text-anchor="end" font-size="12">${escapeHtml(shortName(row.tokenizer))}</text>
-        <rect x="${Math.min(x0, x1)}" y="${y}" width="${Math.abs(x1 - x0)}" height="16" fill="#2a6f97"/>
-        <line x1="${lo}" x2="${hi}" y1="${y + 8}" y2="${y + 8}" stroke="#1c1b19" stroke-width="1.5"/>
-        <line x1="${lo}" x2="${lo}" y1="${y + 3}" y2="${y + 13}" stroke="#1c1b19"/>
-        <line x1="${hi}" x2="${hi}" y1="${y + 3}" y2="${y + 13}" stroke="#1c1b19"/>
-      </g>`;
+  const grid = TICKS.filter((t) => t <= maxX + 0.01)
+    .map((t) => {
+      const px = x(t);
+      return `<line class="chart-grid" x1="${px}" x2="${px}" y1="${top - 8}" y2="${height - bottom}" />
+        <text class="chart-tick" x="${px}" y="${top - 12}" text-anchor="middle">${t.toFixed(2)}</text>`;
     })
     .join("");
   const parityX = x(1);
-  return `<svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="ID over EN token ratio">
-    <line x1="${parityX}" x2="${parityX}" y1="${top}" y2="${height - 20}" stroke="#888" stroke-dasharray="4 4"/>
-    ${bars}
-    <text x="${parityX + 4}" y="${height - 6}" font-size="11" fill="#5b574f">parity = 1</text>
-  </svg>`;
-}
-
-export function colorize(pieces) {
-  if (!pieces.length) return "<em>empty → 0 tokens</em>";
-  return pieces
-    .map((piece, i) => {
-      const color = PALETTE[i % PALETTE.length];
-      return `<span style="background:${color}">${escapeHtml(piece)}</span>`;
+  const bars = rows
+    .map((row, i) => {
+      const y = top + i * rowH + 10;
+      const x1 = x(row.displayRatio);
+      const lo = x(row.displayLo);
+      const hi = x(row.displayHi);
+      const fill = barColor(i, rows.length);
+      const tip = [
+        row.tokenizer,
+        `revision ${row.revision}`,
+        `ratio ${fmtRatio(row.displayRatio, 2)}`,
+        `CI ${fmt(row.displayLo, 3)}–${fmt(row.displayHi, 3)}`,
+        `word ratio ${fmt(row.displayWord, 3)}`,
+        `extra / 1M EN ${fmtInt(row.displayExtra)}`,
+      ].join(" · ");
+      return `<g class="chart-row" tabindex="0" role="graphics-symbol" aria-label="${escapeHtml(tip)}">
+        <title>${escapeHtml(tip)}</title>
+        <text class="chart-label" x="${left - 8}" y="${y + 12}" text-anchor="end">${escapeHtml(row.shortName)}</text>
+        <rect class="chart-bar" x="${x(0)}" y="${y}" width="${Math.max(2, x1 - x(0))}" height="18" rx="2" fill="${fill}"/>
+        <line x1="${lo}" x2="${hi}" y1="${y + 9}" y2="${y + 9}" class="chart-ci"/>
+        <line x1="${lo}" x2="${lo}" y1="${y + 4}" y2="${y + 14}" class="chart-ci"/>
+        <line x1="${hi}" x2="${hi}" y1="${y + 4}" y2="${y + 14}" class="chart-ci"/>
+        <text class="chart-value" x="${x1 + 6}" y="${y + 13}">${fmtRatio(row.displayRatio, 2)}</text>
+      </g>`;
     })
     .join("");
+  return `<figure class="chart-wrap">
+    <svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="chart-title chart-desc">
+      <title id="chart-title">Indonesian over English token ratio by tokenizer</title>
+      <desc id="chart-desc">Horizontal bars with 95% confidence intervals. Parity at 1.0.</desc>
+      ${grid}
+      <line class="chart-parity" x1="${parityX}" x2="${parityX}" y1="${top - 8}" y2="${height - bottom}"/>
+      <text class="chart-parity-label" x="${parityX + 4}" y="${height - 6}">parity = 1.0</text>
+      ${bars}
+    </svg>
+    <p class="sr-only">See the sortable table below for the same numbers.</p>
+  </figure>`;
 }
 
-function shortName(name) {
-  return name.replace("mistralai/", "").replace("aisingapore/", "").replace("deepseek-ai/", "");
+const COLS = [
+  { key: "shortName", label: "Tokenizer", num: false },
+  { key: "displayRatio", label: "ID/EN tokens", num: true, ratio: true },
+  { key: "displayLo", label: "95% CI low", num: true, hidden: "compact" },
+  { key: "displayHi", label: "95% CI high", num: true, hidden: "compact" },
+  { key: "displayWord", label: "ID/EN words", num: true },
+  { key: "displayExtra", label: "Extra / 1M EN", num: true, int: true },
+];
+
+export function renderTable(rows, sort) {
+  const sorted = [...rows];
+  if (sort?.key) {
+    const dir = sort.dir === "desc" ? -1 : 1;
+    sorted.sort((a, b) => {
+      const av = a[sort.key];
+      const bv = b[sort.key];
+      if (typeof av === "number" && typeof bv === "number") return (av - bv) * dir;
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+  }
+  const bestTok = rows[0]?.tokenizer;
+  const worstTok = rows[rows.length - 1]?.tokenizer;
+  const head = COLS.filter((c) => c.hidden !== "compact")
+    .map(
+      (c) =>
+        `<th scope="col" class="${c.num ? "num" : ""}" data-sort="${c.key}">${c.label}<span class="sort" aria-hidden="true"></span></th>`,
+    )
+    .join("");
+  const body = sorted
+    .map((row) => {
+      const tier =
+        row.tokenizer === bestTok ? "best" : row.tokenizer === worstTok ? "worst" : "";
+      const ci = `${fmt(row.displayLo, 3)}–${fmt(row.displayHi, 3)}`;
+      const title = `${row.tokenizer} @ ${row.revision}`;
+      return `<tr class="${tier}" data-tok="${escapeHtml(row.tokenizer)}">
+      <td title="${escapeHtml(title)}"><strong>${escapeHtml(row.shortName)}</strong></td>
+      <td class="num" data-label="ID/EN tokens">${fmtRatio(row.displayRatio, 2)}</td>
+      <td class="num" data-label="95% CI">${ci}</td>
+      <td class="num" data-label="ID/EN words">${fmt(row.displayWord, 3)}</td>
+      <td class="num" data-label="Extra / 1M EN">${fmtInt(row.displayExtra)}</td>
+    </tr>`;
+    })
+    .join("");
+  const cards = sorted
+    .map((row) => {
+      const tier =
+        row.tokenizer === bestTok ? "best" : row.tokenizer === worstTok ? "worst" : "";
+      return `<article class="board-card ${tier}">
+        <h3>${escapeHtml(row.shortName)}</h3>
+        <p class="muted small">${escapeHtml(row.tokenizer)}</p>
+        <dl>
+          <div><dt>ID/EN tokens</dt><dd>${fmtRatio(row.displayRatio, 2)}</dd></div>
+          <div><dt>95% CI</dt><dd>${fmt(row.displayLo, 3)}–${fmt(row.displayHi, 3)}</dd></div>
+          <div><dt>ID/EN words</dt><dd>${fmt(row.displayWord, 3)}</dd></div>
+          <div><dt>Extra / 1M EN</dt><dd>${fmtInt(row.displayExtra)}</dd></div>
+        </dl>
+      </article>`;
+    })
+    .join("");
+  return `<div class="table-scroll" role="region" aria-label="Tokenizer leaderboard table">
+    <table class="board-table">
+      <thead><tr>${head}</tr></thead>
+      <tbody>${body}</tbody>
+    </table>
+  </div>
+  <div class="board-cards" aria-label="Tokenizer leaderboard cards">${cards}</div>`;
 }
 
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+export function renderCalculator(rows) {
+  const body = rows
+    .map(
+      (row) => `<tr data-ratio="${row.displayRatio}">
+        <td>${escapeHtml(row.shortName)}</td>
+        <td class="num calc-out">—</td>
+      </tr>`,
+    )
+    .join("");
+  return `<section class="calculator" aria-labelledby="calc-title">
+    <h2 id="calc-title">What does this mean?</h2>
+    <p class="muted">Token multipliers only — not dollar prices.</p>
+    <label for="en-tokens">If English uses this many tokens…</label>
+    <input type="number" id="en-tokens" min="0" step="1000" value="1000000" inputmode="numeric" />
+    <div class="table-scroll">
+      <table class="calc-table">
+        <thead><tr><th>Tokenizer</th><th class="num">Indonesian tokens</th></tr></thead>
+        <tbody id="calc-body">${body}</tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
+export function updateCalculator() {
+  const input = document.getElementById("en-tokens");
+  if (!input) return;
+  const en = Number(input.value);
+  const tbody = document.getElementById("calc-body");
+  if (!tbody || !Number.isFinite(en)) return;
+  tbody.querySelectorAll("tr").forEach((tr) => {
+    const ratio = Number(tr.dataset.ratio);
+    const out = tr.querySelector(".calc-out");
+    if (out && Number.isFinite(ratio)) {
+      out.textContent = Math.round(en * ratio).toLocaleString("en-US");
+    }
+  });
 }

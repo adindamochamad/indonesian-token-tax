@@ -1,17 +1,49 @@
-import { TOKENIZER_SPECS, loadTokenizer, countAndPieces, charsPerToken } from "./tokenizers.js";
-import { sliceRows, renderTable, renderChart, colorize, fmt } from "./leaderboard.js";
+import { TOKENIZER_SPECS } from "./specs.js";
+import {
+  sliceRows,
+  sliceCaveat,
+  renderChart,
+  renderTable,
+  renderCalculator,
+  updateCalculator,
+} from "./leaderboard.js";
+import { renderHero } from "./hero.js";
+import { initTheme } from "./theme.js";
+import {
+  bindExampleChips,
+  bindTryCounters,
+  loadTryText,
+  persistTryText,
+  EXAMPLES,
+  renderComparisonTable,
+  renderDetailRow,
+} from "./try.js";
 import "./styles.css";
 
-const state = { data: null };
+const state = {
+  data: null,
+  sort: { key: "displayRatio", dir: "asc" },
+  slice: "flores",
+  runtime: null,
+  tokenizing: false,
+};
 
 async function boot() {
+  initTheme();
   const res = await fetch("results.json");
   state.data = await res.json();
+  document.getElementById("hero").innerHTML = renderHero(state.data);
+  document.getElementById("examples").innerHTML = EXAMPLES.map(
+    (ex, i) => `<button type="button" class="chip" data-example="${i}">${ex.label}</button>`,
+  ).join("");
   bind();
+  loadTryText();
+  bindTryCounters();
+  bindExampleChips();
   paintLeaderboard();
   const params = new URLSearchParams(location.search);
   if (params.get("tab") === "try") {
-    document.querySelector('[data-panel="try"]')?.click();
+    activateTab("try");
   }
   if (params.get("run") === "1") {
     await onTokenize();
@@ -20,53 +52,159 @@ async function boot() {
 
 function bind() {
   document.querySelectorAll(".tabs button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b === btn)));
-      document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === btn.dataset.panel));
+    btn.addEventListener("click", () => activateTab(btn.dataset.panel));
+    btn.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        activateTab(btn.dataset.panel);
+      }
     });
   });
-  document.getElementById("slice").addEventListener("change", paintLeaderboard);
-  document.getElementById("tokenize").addEventListener("click", onTokenize);
+  document.getElementById("slice-group")?.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("button[data-slice]");
+    if (!btn) return;
+    state.slice = btn.dataset.slice;
+    document.querySelectorAll("#slice-group button").forEach((b) => {
+      b.setAttribute("aria-checked", String(b === btn));
+    });
+    paintLeaderboard();
+  });
+  document.getElementById("board-table")?.addEventListener("click", (ev) => {
+    const th = ev.target.closest("th[data-sort]");
+    if (!th) return;
+    const key = th.dataset.sort;
+    if (state.sort.key === key) {
+      state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
+    } else {
+      state.sort = { key, dir: "asc" };
+    }
+    paintLeaderboard();
+  });
+  document.getElementById("calculator")?.addEventListener("input", (ev) => {
+    if (ev.target.id === "en-tokens") updateCalculator();
+  });
+  document.getElementById("tokenize")?.addEventListener("click", () => onTokenize());
+  document.getElementById("show-en")?.addEventListener("change", () => {
+    if (state.lastTry) paintTryResults(state.lastTry);
+  });
+  document.getElementById("id-text")?.addEventListener("keydown", tokenizeShortcut);
+  document.getElementById("en-text")?.addEventListener("keydown", tokenizeShortcut);
+}
+
+function tokenizeShortcut(ev) {
+  if ((ev.metaKey || ev.ctrlKey) && ev.key === "Enter") {
+    ev.preventDefault();
+    onTokenize();
+  }
+}
+
+function activateTab(panel) {
+  document.querySelectorAll(".tabs button").forEach((b) => {
+    b.setAttribute("aria-selected", String(b.dataset.panel === panel));
+  });
+  document.querySelectorAll(".panel").forEach((p) => {
+    const on = p.id === panel;
+    p.classList.toggle("active", on);
+    p.hidden = !on;
+  });
 }
 
 function paintLeaderboard() {
-  const slice = document.getElementById("slice").value;
-  const rows = sliceRows(state.data, slice);
-  document.getElementById("board-table").innerHTML = renderTable(rows);
-  document.getElementById("board-chart").innerHTML = renderChart(rows);
+  const rows = sliceRows(state.data, state.slice);
+  document.getElementById("slice-caveat").textContent = sliceCaveat(state.slice);
+  document.getElementById("board-chart").innerHTML = renderChart(rows, state.data);
+  document.getElementById("board-table").innerHTML = renderTable(rows, state.sort);
+  document.getElementById("calculator").innerHTML = renderCalculator(rows);
+  const input = document.getElementById("en-tokens");
+  if (input) updateCalculator();
 }
 
-function setTryStatus(name, status) {
-  const el = document.querySelector(`[data-tok="${CSS.escape(name)}"] .status`);
-  if (el) el.textContent = status;
+async function getRuntime() {
+  if (!state.runtime) {
+    state.runtime = await import("./tokenize-runtime.js");
+  }
+  return state.runtime;
 }
 
 async function onTokenize() {
+  if (state.tokenizing) return;
+  state.tokenizing = true;
+  persistTryText();
   const idText = document.getElementById("id-text").value;
   const enText = document.getElementById("en-text").value;
+  const showEn = document.getElementById("show-en")?.checked;
   const out = document.getElementById("try-out");
-  out.innerHTML = TOKENIZER_SPECS.map(
-    (spec) => `<article class="try-row" data-tok="${spec.name}">
-      <h3>${spec.name}</h3>
-      <div class="status">waiting</div>
-    </article>`,
-  ).join("");
+  const runtime = await getRuntime();
+  const rows = TOKENIZER_SPECS.map((spec) => ({
+    spec,
+    status: "waiting",
+    idN: null,
+    enN: null,
+    cpt: null,
+    ratio: null,
+    idPieces: "",
+    enPieces: "",
+    error: null,
+  }));
+  state.lastTry = { rows, showEn: false };
+  out.innerHTML = `<div id="try-compare"></div><div id="try-details"></div>`;
+  paintTryResults(state.lastTry);
 
-  for (const spec of TOKENIZER_SPECS) {
-    setTryStatus(spec.name, "loading tokenizer files…");
-    const loaded = await loadTokenizer(spec, setTryStatus);
-    const id = countAndPieces(loaded, idText);
-    const en = enText ? countAndPieces(loaded, enText) : null;
-    const cpt = charsPerToken(idText, id.n);
-    const ratio = en && en.n ? id.n / en.n : null;
-    const article = document.querySelector(`[data-tok="${CSS.escape(spec.name)}"]`);
-    article.innerHTML = `<h3>${spec.name}</h3>
-      <div class="meta">ID ${id.n} tokens · chars/token ${cpt == null ? "—" : fmt(cpt, 2)}${
-        ratio == null ? "" : ` · ID/EN ${fmt(ratio, 4)}`
-      }${en ? ` · EN ${en.n} tokens` : ""}</div>
-      <div class="spans"><strong>Indonesian</strong><br>${colorize(id.pieces)}</div>
-      ${en ? `<div class="spans"><strong>English</strong><br>${colorize(en.pieces)}</div>` : ""}`;
+  for (let i = 0; i < TOKENIZER_SPECS.length; i += 1) {
+    const spec = TOKENIZER_SPECS[i];
+    const row = rows[i];
+    row.status = "loading";
+    paintTryResults({ rows, showEn: document.getElementById("show-en")?.checked });
+    try {
+      const loaded = await runtime.loadTokenizer(spec);
+      const id = runtime.countAndPieces(loaded, idText);
+      const en = enText ? runtime.countAndPieces(loaded, enText) : null;
+      row.idN = id.n;
+      row.enN = en?.n ?? null;
+      row.cpt = runtime.charsPerToken(idText, id.n);
+      row.ratio = en && en.n ? id.n / en.n : null;
+      row.idPieces = runtime.colorizePieces(id.pieces);
+      row.enPieces = en ? runtime.colorizePieces(en.pieces) : "";
+      row.status = "done";
+    } catch (err) {
+      row.status = "error";
+      row.error = err?.message ?? String(err);
+    }
+    paintTryResults({ rows, showEn: document.getElementById("show-en")?.checked });
   }
+  state.lastTry = { rows, showEn: document.getElementById("show-en")?.checked };
+  state.tokenizing = false;
+}
+
+function paintTryResults({ rows, showEn }) {
+  const compare = document.getElementById("try-compare");
+  const details = document.getElementById("try-details");
+  if (!compare || !details) return;
+  const compData = rows
+    .filter((r) => r.status === "done")
+    .map((r) => ({
+      spec: r.spec,
+      shortName: r.spec.shortName,
+      idN: r.idN,
+      enN: r.enN,
+      ratio: r.ratio,
+    }));
+  compare.innerHTML =
+    compData.length > 0
+      ? `<h3 class="try-compare-title">Comparison</h3>${renderComparisonTable(compData)}`
+      : "";
+  details.innerHTML = rows
+    .map((r, i) =>
+      renderDetailRow(
+        r.spec,
+        r,
+        r.idPieces,
+        r.enPieces,
+        showEn,
+        i === 0,
+      ),
+    )
+    .join("");
 }
 
 boot();

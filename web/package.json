@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "predev": "node ../scripts/copy-results.mjs",
+    "predev": "node ../scripts/copy-results.mjs && node ../scripts/write-favicon.mjs && node ../scripts/render-og.mjs",
     "dev": "vite",
-    "prebuild": "node ../scripts/copy-results.mjs",
+    "prebuild": "node ../scripts/copy-results.mjs && node ../scripts/write-favicon.mjs && node ../scripts/render-og.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173"
   },
