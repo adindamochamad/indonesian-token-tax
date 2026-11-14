@@ -76,6 +76,7 @@ CSV_FIELDS = [
     "tokenizer",
     "repo_id",
     "revision",
+    "tokenizer_file_sha256",
     "n_pairs",
     "n_pairs_in_ratio",
     "id_tokens_mean",
@@ -95,6 +96,11 @@ CSV_FIELDS = [
     "en_words_mean",
     "word_ratio_id_en",
     "extra_tokens_per_1m_en",
+    "ratio_id_en_matched",
+    "ratio_matched_ci_low",
+    "ratio_matched_ci_high",
+    "word_ratio_id_en_matched",
+    "extra_tokens_per_1m_en_matched",
 ]
 
 
@@ -134,6 +140,9 @@ def measure_slice(encoder: Encoder, pairs: list[Pair], slice_name: str) -> dict[
     en_words_total = 0
     id_tokens_total = 0
     en_tokens_total = 0
+    matched_en_token_counts: list[int] = []
+    matched_en_words_total = 0
+    has_matched = any(pair.en_matched is not None for pair in pairs)
 
     for pair in pairs:
         id_spans = encoder.token_spans(pair.id_text)
@@ -156,6 +165,10 @@ def measure_slice(encoder: Encoder, pairs: list[Pair], slice_name: str) -> dict[
         id_split += split_id
         split_en, _ = count_words_split_ge3(en_w, en_spans)
         en_split += split_en
+        if has_matched:
+            matched_text = pair.en_matched or ""
+            matched_en_token_counts.append(encoder.n_tokens(matched_text))
+            matched_en_words_total += len(word_spans(matched_text))
 
     ratio_en = [e for e in en_token_counts if e > 0]
     ratio = token_ratio(id_token_counts, en_token_counts)
@@ -165,11 +178,12 @@ def measure_slice(encoder: Encoder, pairs: list[Pair], slice_name: str) -> dict[
     id_w_mean, _ = _stats(id_word_counts)
     en_w_mean, _ = _stats(en_word_counts)
 
-    return {
+    row = {
         "slice": slice_name,
         "tokenizer": encoder.name,
         "repo_id": encoder.repo_id,
         "revision": encoder.revision,
+        "tokenizer_file_sha256": encoder.tokenizer_file_sha256,
         "n_pairs": len(pairs),
         "n_pairs_in_ratio": len(ratio_en),
         "id_tokens_mean": id_mean,
@@ -189,7 +203,21 @@ def measure_slice(encoder: Encoder, pairs: list[Pair], slice_name: str) -> dict[
         "en_words_mean": en_w_mean,
         "word_ratio_id_en": safe_div(id_words_total, en_words_total),
         "extra_tokens_per_1m_en": extra_tokens_per_million(ratio),
+        "ratio_id_en_matched": None,
+        "ratio_matched_ci_low": None,
+        "ratio_matched_ci_high": None,
+        "word_ratio_id_en_matched": None,
+        "extra_tokens_per_1m_en_matched": None,
     }
+    if has_matched:
+        matched_ratio = token_ratio(id_token_counts, matched_en_token_counts)
+        matched_lo, matched_hi = bootstrap_ratio_ci(id_token_counts, matched_en_token_counts)
+        row["ratio_id_en_matched"] = matched_ratio
+        row["ratio_matched_ci_low"] = matched_lo
+        row["ratio_matched_ci_high"] = matched_hi
+        row["word_ratio_id_en_matched"] = safe_div(id_words_total, matched_en_words_total)
+        row["extra_tokens_per_1m_en_matched"] = extra_tokens_per_million(matched_ratio)
+    return row
 
 
 def write_outputs(rows: list[dict[str, Any]], meta: dict[str, Any], out_dir: Path) -> None:
@@ -243,6 +271,20 @@ def main(argv: list[str] | None = None) -> int:
             "bootstrap_resamples": 1000,
             "bootstrap_seed": 42,
         },
+        "tokenizer_files": [
+            {
+                "repo_id": encoder.repo_id,
+                "revision": encoder.revision,
+                "tokenizer_file": (
+                    f"{encoder.name}.tiktoken"
+                    if encoder.repo_id.startswith("tiktoken/")
+                    else "tokenizer.json"
+                ),
+                "tokenizer_file_sha256": encoder.tokenizer_file_sha256,
+                "vocab_file_sha256": encoder.vocab_file_sha256,
+            }
+            for encoder in encoders
+        ],
     }
     write_outputs(rows, meta, args.out)
     return 0

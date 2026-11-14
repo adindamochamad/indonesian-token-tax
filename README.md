@@ -16,6 +16,12 @@ How many more tokens Indonesian (`id`) costs than English (`en`) on popular LLM 
 
 This is a **token-count** comparison on parallel sentences. It is not a quality ranking, not a price table, and not a claim about which model is “better at Indonesian.”
 
+A Space (or `python app.py`) download fetches **tokenizer files only**, no model weights. The leaderboard reads committed `results/` files; tokenizers load on the first **Tokenize** click.
+
+## Key findings
+
+On FLORES-200 `devtest`, Indonesian has a **word** ratio of about 0.90 versus English, so the Indonesian side is not the longer text. The **token** ratio on that slice still runs about **1.25** (`o200k_base`) to **1.84** (`Mistral-7B-Instruct-v0.3`). `Qwen/Qwen2.5-7B-Instruct` and `sail/Sailor2-8B` share an identical `vocab.json` (SHA-256 `ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910`) and produced identical counts here; their `tokenizer.json` hashes differ.
+
 ## Method
 
 For each tokenizer and each slice, every sentence pair is encoded as **raw text** with `add_special_tokens=False` (no chat template). Special BOS tokens would add the same constant on both sides for some tokenizers and still distort per-sentence means.
@@ -40,7 +46,7 @@ Also reported:
 | --- | --- | --- | --- |
 | `flores` | [`mteb/flores`](https://huggingface.co/datasets/mteb/flores) revision `69edd3336d102dd184dd531b57defac6c9c60c8f`, split `devtest`, columns `ind_Latn` / `eng_Latn` | 1012 | FLORES-200 devtest via an ungated parquet mirror. Official `facebook/flores` and `openlanguagedata/flores_plus` are gated. |
 | `domain` | [`data/domain_pairs.jsonl`](data/domain_pairs.jsonl) | 30 | Synthetic. Chat, customer support, code comments, formal letters. |
-| `informal` | [`data/informal_pairs.jsonl`](data/informal_pairs.jsonl) | 20 | Synthetic. Slang/abbreviations (`gk`, `bgt`, `udh`, …) with English glosses. |
+| `informal` | [`data/informal_pairs.jsonl`](data/informal_pairs.jsonl) | 40 | Synthetic and small. Slang/abbreviations with a fuller English gloss (`en_text`) and a length-matched informal gloss (`en_matched`, word count within 1 of Indonesian). |
 
 ## Tokenizers
 
@@ -55,7 +61,7 @@ Used:
 - `deepseek-ai/DeepSeek-V3`
 - `aisingapore/Llama-SEA-LION-v3-8B-IT`
 
-Exact repo ids and git SHAs are in [`results/results.json`](results/results.json).
+Exact repo ids, git SHAs, and SHA-256 of each `tokenizer.json` (or tiktoken BPE file) are in [`results/results.json`](results/results.json) and the `tokenizer_file_sha256` column of [`results/results.csv`](results/results.csv). `vocab.json` hashes, when the file exists, live under `meta.tokenizer_files`.
 
 Skipped (license click or remote code):
 
@@ -78,19 +84,19 @@ FLORES-200 `devtest` (`mteb/flores` @ `69edd3336d102dd184dd531b57defac6c9c60c8f`
 | `cl100k_base` | 1.548 | 1.534–1.563 |
 | `mistralai/Mistral-7B-Instruct-v0.3` | 1.840 | 1.820–1.861 |
 
-`Qwen/Qwen2.5-7B-Instruct` and `sail/Sailor2-8B` produced identical counts on all three slices in this run (their `vocab.json` blobs match; `tokenizer.json` does not). Informal-slice ratios sit closer to 1.1, but Indonesian has fewer words than the English glosses there (`word_ratio` ≈ 0.66), so that slice is not a clean tokenizer-tax comparison.
+On the informal slice (n=40, synthetic), the fuller English gloss is longer than the slang (`word_ratio` ≈ 0.68), so the ID/EN **token** ratio sits near 1.06–1.12. Against length-matched informal English (`word_ratio` ≈ 1.05) the token ratio is about **1.37–1.67**. Treat both as illustrations; the slice is small.
 
 ## Limitations
 
 - FLORES-200 is professionally translated, news-like, formal. Chat and slang are only the small synthetic slices.
-- Synthetic slices are tiny; their CIs are wide. Treat them as illustrations.
+- Synthetic slices are small; their CIs are wide. Treat them as illustrations. The informal length-matched column is still only 40 pairs.
 - A ratio above 1 can come from the tokenizer **or** from Indonesian using more words than the English reference. Check the word-ratio column.
 - Offset-based “% words split into ≥3 tokens” depends on how a tokenizer assigns character spans around spaces.
 - This repository does not evaluate generation quality, toxicity, or downstream accuracy.
 
 ## Reproduce
 
-CPU only. Tokenizer files are downloaded from Hugging Face / tiktoken; no model weights.
+CPU only. Hugging Face / tiktoken downloads are **tokenizer files only** — no model weights.
 
 ```bash
 python3 -m venv .venv

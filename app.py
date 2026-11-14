@@ -4,25 +4,32 @@ from __future__ import annotations
 
 import html
 import json
-from functools import lru_cache
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import gradio as gr
 import pandas as pd
 import plotly.graph_objects as go
 
-from src.encode import Encoder
-from src.measure import load_all_encoders
+if TYPE_CHECKING:
+    from src.encode import Encoder
 
 ROOT = Path(__file__).resolve().parent
 RESULTS_JSON = ROOT / "results" / "results.json"
 
 TOKEN_PALETTE = ["#cfe8ff", "#ffe3c2", "#d4f0d4", "#f3d4f0", "#fff3b0", "#e0d4ff"]
 
+_ENCODERS: tuple[Encoder, ...] | None = None
 
-@lru_cache(maxsize=1)
+
 def get_encoders() -> tuple[Encoder, ...]:
-    return tuple(load_all_encoders())
+    """Load tokenizers on first Try-your-text use; cache in this process."""
+    global _ENCODERS
+    if _ENCODERS is None:
+        from src.measure import load_all_encoders
+
+        _ENCODERS = tuple(load_all_encoders())
+    return _ENCODERS
 
 
 def _read_rows() -> pd.DataFrame:
@@ -39,25 +46,36 @@ def leaderboard(slice_name: str):
         return empty, go.Figure()
     view = df[df["slice"] == slice_name].copy()
     view = view.sort_values("ratio_id_en")
-    table = view[
-        [
-            "tokenizer",
-            "revision",
-            "ratio_id_en",
-            "ratio_ci_low",
-            "ratio_ci_high",
-            "extra_tokens_per_1m_en",
-            "id_tokens_mean",
-            "en_tokens_mean",
-            "id_chars_per_token",
-            "en_chars_per_token",
-            "word_ratio_id_en",
-            "id_pct_words_split_ge3",
-        ]
-    ].rename(
+    columns = [
+        "tokenizer",
+        "revision",
+        "tokenizer_file_sha256",
+        "ratio_id_en",
+        "ratio_ci_low",
+        "ratio_ci_high",
+        "extra_tokens_per_1m_en",
+        "id_tokens_mean",
+        "en_tokens_mean",
+        "id_chars_per_token",
+        "en_chars_per_token",
+        "word_ratio_id_en",
+        "id_pct_words_split_ge3",
+    ]
+    if slice_name == "informal":
+        columns.extend(
+            [
+                "ratio_id_en_matched",
+                "ratio_matched_ci_low",
+                "ratio_matched_ci_high",
+                "word_ratio_id_en_matched",
+            ]
+        )
+    present = [c for c in columns if c in view.columns]
+    table = view[present].rename(
         columns={
             "tokenizer": "Tokenizer",
             "revision": "Revision",
+            "tokenizer_file_sha256": "tokenizer.json SHA-256",
             "ratio_id_en": "ID/EN ratio",
             "ratio_ci_low": "CI low",
             "ratio_ci_high": "CI high",
@@ -68,6 +86,10 @@ def leaderboard(slice_name: str):
             "en_chars_per_token": "EN chars/token",
             "word_ratio_id_en": "ID/EN word ratio",
             "id_pct_words_split_ge3": "% ID words ≥3 tokens",
+            "ratio_id_en_matched": "ID/EN matched",
+            "ratio_matched_ci_low": "Matched CI low",
+            "ratio_matched_ci_high": "Matched CI high",
+            "word_ratio_id_en_matched": "ID/EN matched word ratio",
         }
     )
     fig = go.Figure()
@@ -149,6 +171,7 @@ def build_app() -> gr.Blocks:
 # Indonesian Token Tax
 How many more tokens Indonesian text uses than English, across popular LLM tokenizers.
 Ratios are **token multipliers**, not prices. FLORES is formal/news-like; synthetic slices are small.
+A Space download fetches **tokenizer files only**, no model weights.
             """
         )
         with gr.Tabs():
@@ -178,14 +201,13 @@ Ratios are **token multipliers**, not prices. FLORES is formal/news-like; synthe
                 viz = gr.HTML(label="Token boundaries")
                 run.click(try_text, inputs=[id_box, en_box], outputs=[counts, viz])
         gr.Markdown(
-            "Tokenizers only — no model weights. `add_special_tokens=False`. "
-            "See README for method and limitations."
+            "Tokenizers load on the first Tokenize click and stay in memory. "
+            "`add_special_tokens=False`. See README for method and limitations."
         )
     return demo
 
 
 demo = build_app()
-get_encoders()
 
 if __name__ == "__main__":
     demo.launch(server_name="127.0.0.1", server_port=7860, share=False)

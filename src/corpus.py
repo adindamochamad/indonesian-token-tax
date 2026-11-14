@@ -26,6 +26,7 @@ class Pair:
     slice_name: str
     synthetic: bool
     domain: str | None = None
+    en_matched: str | None = None
 
 
 def load_jsonl_pairs(path: Path, slice_name: str) -> list[Pair]:
@@ -43,6 +44,7 @@ def load_jsonl_pairs(path: Path, slice_name: str) -> list[Pair]:
                     slice_name=slice_name,
                     synthetic=bool(row.get("synthetic", True)),
                     domain=row.get("domain"),
+                    en_matched=row.get("en_matched"),
                 )
             )
     return pairs

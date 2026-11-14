@@ -1,20 +1,40 @@
-{"id_text": "Aku gk sempet ngerjain PR, nanti aja ya.", "en_text": "I didn't have time to do the homework; later, okay?", "domain": "informal", "synthetic": true}
-{"id_text": "Filmnya bagus bgt, wajib nonton.", "en_text": "The movie is really good, you have to watch it.", "domain": "informal", "synthetic": true}
-{"id_text": "Udh sampe rumah belum?", "en_text": "Have you gotten home yet?", "domain": "informal", "synthetic": true}
-{"id_text": "Tp kuota aku abis, ntar aku wifi dulu.", "en_text": "But my data is out; I'll use wifi later.", "domain": "informal", "synthetic": true}
-{"id_text": "Jgn lupa bawa ktp, kalo ga gabisa masuk.", "en_text": "Don't forget to bring your ID card, otherwise you can't get in.", "domain": "informal", "synthetic": true}
-{"id_text": "Lagi di jalan, macet bgt di tol.", "en_text": "I'm on the way; traffic on the toll road is really bad.", "domain": "informal", "synthetic": true}
-{"id_text": "Yg kemarin itu udh dibayar belum?", "en_text": "Has yesterday's one been paid already?", "domain": "informal", "synthetic": true}
-{"id_text": "Gpp, aku tunggu di depan indomaret.", "en_text": "It's fine, I'll wait in front of the mini-market.", "domain": "informal", "synthetic": true}
-{"id_text": "Bsk pagi jam 7 aja, jgn kesiangan.", "en_text": "Tomorrow morning at 7 is fine; don't oversleep.", "domain": "informal", "synthetic": true}
-{"id_text": "Aku lg capek, gabisa telpon dulu.", "en_text": "I'm tired right now, I can't call yet.", "domain": "informal", "synthetic": true}
-{"id_text": "Kalo ada diskon ksh tau aku ya.", "en_text": "If there's a discount, let me know.", "domain": "informal", "synthetic": true}
-{"id_text": "Emg dia udh konfirmasi atau blom?", "en_text": "Has he actually confirmed, or not yet?", "domain": "informal", "synthetic": true}
-{"id_text": "Hrg nya mahal bgt sih, mending yg lain.", "en_text": "The price is really expensive; better pick another one.", "domain": "informal", "synthetic": true}
-{"id_text": "Aku ntar transfer, no rek nya dong.", "en_text": "I'll transfer later; send the account number.", "domain": "informal", "synthetic": true}
-{"id_text": "Ujan deres, aku nunggu di halte dulu.", "en_text": "It's pouring; I'll wait at the bus stop first.", "domain": "informal", "synthetic": true}
-{"id_text": "Skalian beliin es teh, aku haus bgt.", "en_text": "While you're at it, buy iced tea too; I'm really thirsty.", "domain": "informal", "synthetic": true}
-{"id_text": "Dia balesnya lama bgt, aku udh wa 3x.", "en_text": "He replies really slowly; I've already sent three WhatsApp messages.", "domain": "informal", "synthetic": true}
-{"id_text": "Gtw kenapa aplikasinya lemot parah.", "en_text": "I don't know why the app is so laggy.", "domain": "informal", "synthetic": true}
-{"id_text": "Otws, 5 mnt lg nyampe.", "en_text": "On the way, I'll be there in five minutes.", "domain": "informal", "synthetic": true}
-{"id_text": "Mager bgt keluar, makan di rumah aja yuk.", "en_text": "I'm too lazy to go out; let's just eat at home.", "domain": "informal", "synthetic": true}
+{"id_text": "Aku gk sempet ngerjain PR, nanti aja ya.", "en_text": "I didn't have time to do the homework; later, okay?", "en_matched": "I didnt do homework yet, later ok.", "domain": "informal", "synthetic": true}
+{"id_text": "Filmnya bagus bgt, wajib nonton.", "en_text": "The movie is really good, you have to watch it.", "en_matched": "Movie is so good, must watch.", "domain": "informal", "synthetic": true}
+{"id_text": "Udh sampe rumah belum?", "en_text": "Have you gotten home yet?", "en_matched": "U home yet now?", "domain": "informal", "synthetic": true}
+{"id_text": "Tp kuota aku abis, ntar aku wifi dulu.", "en_text": "But my data is out; I'll use wifi later.", "en_matched": "But my data is gone, wifi later.", "domain": "informal", "synthetic": true}
+{"id_text": "Jgn lupa bawa ktp, kalo ga gabisa masuk.", "en_text": "Don't forget to bring your ID card, otherwise you can't get in.", "en_matched": "Dont forget ID or u cant enter.", "domain": "informal", "synthetic": true}
+{"id_text": "Lagi di jalan, macet bgt di tol.", "en_text": "I'm on the way; traffic on the toll road is really bad.", "en_matched": "On the road, toll is so jammed.", "domain": "informal", "synthetic": true}
+{"id_text": "Yg kemarin itu udh dibayar belum?", "en_text": "Has yesterday's one been paid already?", "en_matched": "That one from yesterday paid yet?", "domain": "informal", "synthetic": true}
+{"id_text": "Gpp, aku tunggu di depan indomaret.", "en_text": "It's fine, I'll wait in front of the mini-market.", "en_matched": "Np, I wait in front of store.", "domain": "informal", "synthetic": true}
+{"id_text": "Bsk pagi jam 7 aja, jgn kesiangan.", "en_text": "Tomorrow morning at 7 is fine; don't oversleep.", "en_matched": "Tmrw 7am is fine, dont oversleep.", "domain": "informal", "synthetic": true}
+{"id_text": "Aku lg capek, gabisa telpon dulu.", "en_text": "I'm tired right now, I can't call yet.", "en_matched": "Im tired now, cant call yet.", "domain": "informal", "synthetic": true}
+{"id_text": "Kalo ada diskon ksh tau aku ya.", "en_text": "If there's a discount, let me know.", "en_matched": "If theres a deal tell me ya.", "domain": "informal", "synthetic": true}
+{"id_text": "Emg dia udh konfirmasi atau blom?", "en_text": "Has he actually confirmed, or not yet?", "en_matched": "Did he confirm already or not?", "domain": "informal", "synthetic": true}
+{"id_text": "Hrg nya mahal bgt sih, mending yg lain.", "en_text": "The price is really expensive; better pick another one.", "en_matched": "Price is so high, pick another one.", "domain": "informal", "synthetic": true}
+{"id_text": "Aku ntar transfer, no rek nya dong.", "en_text": "I'll transfer later; send the account number.", "en_matched": "Ill transfer later, send acct no.", "domain": "informal", "synthetic": true}
+{"id_text": "Ujan deres, aku nunggu di halte dulu.", "en_text": "It's pouring; I'll wait at the bus stop first.", "en_matched": "Heavy rain, I wait at the stop.", "domain": "informal", "synthetic": true}
+{"id_text": "Skalian beliin es teh, aku haus bgt.", "en_text": "While you're at it, buy iced tea too; I'm really thirsty.", "en_matched": "Also buy iced tea, Im so thirsty.", "domain": "informal", "synthetic": true}
+{"id_text": "Dia balesnya lama bgt, aku udh wa 3x.", "en_text": "He replies really slowly; I've already sent three WhatsApp messages.", "en_matched": "He replies so slow, I WA 3 times.", "domain": "informal", "synthetic": true}
+{"id_text": "Gtw kenapa aplikasinya lemot parah.", "en_text": "I don't know why the app is so laggy.", "en_matched": "Idk why app so laggy.", "domain": "informal", "synthetic": true}
+{"id_text": "Otws, 5 mnt lg nyampe.", "en_text": "On the way, I'll be there in five minutes.", "en_matched": "OTW, 5 min then there.", "domain": "informal", "synthetic": true}
+{"id_text": "Mager bgt keluar, makan di rumah aja yuk.", "en_text": "I'm too lazy to go out; let's just eat at home.", "en_matched": "Too lazy to go out, eat at home.", "domain": "informal", "synthetic": true}
+{"id_text": "Gabisa datang, anaknya lg demam.", "en_text": "Can't come, the kid has a fever.", "en_matched": "Cant come, kid has fever.", "domain": "informal", "synthetic": true}
+{"id_text": "Kamu udh makan blm, mau pesen?", "en_text": "Have you eaten yet, want to order?", "en_matched": "U eaten yet, wanna order?", "domain": "informal", "synthetic": true}
+{"id_text": "Ntar malem nonton bareng yuk, gk?", "en_text": "Want to watch together tonight, or not?", "en_matched": "Watch together tonight, or no?", "domain": "informal", "synthetic": true}
+{"id_text": "Hp aku lowbat bgt, charger dong.", "en_text": "My phone battery is really low; lend me a charger.", "en_matched": "Phone so lowbat, charger pls.", "domain": "informal", "synthetic": true}
+{"id_text": "Kok lama sih, udh 20 mnt nunggu.", "en_text": "Why so long, I've been waiting 20 minutes.", "en_matched": "So slow, waited 20 min already.", "domain": "informal", "synthetic": true}
+{"id_text": "Yg itu sold out, ambil yg ini aja.", "en_text": "That one is sold out, just take this one.", "en_matched": "That one sold out, just take this.", "domain": "informal", "synthetic": true}
+{"id_text": "Aku di deket minimarket, jemput ya.", "en_text": "I'm near the mini-market, pick me up please.", "en_matched": "Im near the store, pick me up.", "domain": "informal", "synthetic": true}
+{"id_text": "Bentar, lagi ngantri di atm.", "en_text": "Hold on, I'm queuing at the ATM.", "en_matched": "Wait, still in ATM line.", "domain": "informal", "synthetic": true}
+{"id_text": "Kalo macet mending naik krl aja.", "en_text": "If traffic is bad, better take the commuter train.", "en_matched": "If jammed, better take the train.", "domain": "informal", "synthetic": true}
+{"id_text": "Skrg lg promo, cepetan beli.", "en_text": "There's a promo now, hurry and buy.", "en_matched": "Promo now, hurry and buy.", "domain": "informal", "synthetic": true}
+{"id_text": "Aku lupa password wifi nya wkwk.", "en_text": "I forgot the wifi password, haha.", "en_matched": "Forgot the wifi password lol.", "domain": "informal", "synthetic": true}
+{"id_text": "Jgn spam chat, aku lg meeting.", "en_text": "Don't spam the chat, I'm in a meeting.", "en_matched": "Dont spam chat, Im in meeting.", "domain": "informal", "synthetic": true}
+{"id_text": "Ujan deras bgt, ojol pada cancel.", "en_text": "It's pouring so hard, the ride-hailing drivers keep cancelling.", "en_matched": "Rain so heavy, drivers all cancel.", "domain": "informal", "synthetic": true}
+{"id_text": "Gaji blm cair, hemat dulu ya.", "en_text": "Paycheck hasn't come in yet, let's save for now.", "en_matched": "Salary not in, save for now.", "domain": "informal", "synthetic": true}
+{"id_text": "Itu link phishing, jgn di klik.", "en_text": "That's a phishing link, don't click it.", "en_matched": "Phishing link, dont click it.", "domain": "informal", "synthetic": true}
+{"id_text": "Aku udh isi saldo ewallet kok.", "en_text": "I already topped up the e-wallet.", "en_matched": "I already topped up ewallet.", "domain": "informal", "synthetic": true}
+{"id_text": "Ntar aku share loc di maps.", "en_text": "I'll share the location on maps later.", "en_matched": "Ill share loc on maps later.", "domain": "informal", "synthetic": true}
+{"id_text": "Makan siang dlu, bales lagi ya.", "en_text": "Eating lunch first, I'll reply again later.", "en_matched": "Lunch first, reply again later.", "domain": "informal", "synthetic": true}
+{"id_text": "Ktp nya expired, harus perpanjang.", "en_text": "The ID card is expired, it has to be renewed.", "en_matched": "ID is expired, must renew it.", "domain": "informal", "synthetic": true}
+{"id_text": "Aku nunggu di lobby hotel ya.", "en_text": "I'll wait in the hotel lobby.", "en_matched": "I wait in hotel lobby ya.", "domain": "informal", "synthetic": true}
