@@ -1,6 +1,10 @@
-import { fmtRatio, fmtInt, escapeHtml } from "./format.js";
-import { shortNameFor } from "./specs.js";
+import { fmtRatio, fmtCount, escapeHtml } from "./format.js";
+import { productNameFor, technicalIdFor, tokenizerFromStripShort } from "./specs.js";
 import { sliceRows } from "./leaderboard.js";
+import { getLang, t } from "./i18n.js";
+
+const O200K = "o200k_base";
+const BASELINE_EN = 1000;
 
 export function floresRange(data) {
   const rows = sliceRows(data, "flores");
@@ -13,6 +17,12 @@ export function floresRange(data) {
   };
 }
 
+export function o200kIdTokensAt1k(data) {
+  const row = sliceRows(data, "flores").find((r) => r.tokenizer === O200K);
+  if (!row) return 1246;
+  return Math.round(BASELINE_EN * row.displayRatio);
+}
+
 function renderTokenBlocks(pieces, lang) {
   return pieces
     .map((piece) => {
@@ -23,20 +33,25 @@ function renderTokenBlocks(pieces, lang) {
 }
 
 function renderStripFigure(strip, pairIndex, idText, enText) {
+  const lang = getLang();
+  const tok = tokenizerFromStripShort(strip.short_name);
+  const product = escapeHtml(productNameFor(tok, lang));
+  const tech = escapeHtml(strip.tokenizer === "o200k_base" ? "o200k_base" : technicalIdFor(tok));
+  const figId = `strip-${strip.short_name.replace(/\s+/g, "-")}`;
   const enBlocks = renderTokenBlocks(strip.en_pieces, "en");
   const idBlocks = renderTokenBlocks(strip.id_pieces, "id");
-  return `<figure class="strip-unit" aria-labelledby="strip-${strip.short_name.replace(/\s+/g, "-")}">
-    <figcaption id="strip-${strip.short_name.replace(/\s+/g, "-")}" class="strip-caption">
-      <strong>${escapeHtml(strip.short_name)}</strong> · pair #${pairIndex} · <code>add_special_tokens=false</code>
+  return `<figure class="strip-unit" aria-labelledby="${figId}">
+    <figcaption id="${figId}" class="strip-caption">
+      <strong>${product}</strong> <span class="mono muted">/ ${tech}</span> · ${t("stripsPair", { n: pairIndex })}
     </figcaption>
     <div class="strip-row">
-      <span class="strip-lang">EN</span>
+      <span class="strip-lang">${t("stripLangEn")}</span>
       <span class="strip-text muted">${escapeHtml(enText)}</span>
       <span class="strip-count num mono">${strip.en_count}</span>
     </div>
     <div class="strip-blocks strip-blocks-en" aria-hidden="true">${enBlocks}</div>
     <div class="strip-row">
-      <span class="strip-lang">ID</span>
+      <span class="strip-lang">${t("stripLangId")}</span>
       <span class="strip-text muted">${escapeHtml(idText)}</span>
       <span class="strip-count num mono">${strip.id_count}</span>
     </div>
@@ -44,68 +59,69 @@ function renderStripFigure(strip, pairIndex, idText, enText) {
   </figure>`;
 }
 
-export function renderHero(data) {
-  const { min, max, rows, wordRatio } = floresRange(data);
-  const nPairs = Number(data.meta?.slices?.flores?.n_pairs ?? 1012);
-  const pairsLabel = nPairs.toLocaleString("en-US");
-  const cheapest = rows[0];
-  const priciest = rows[rows.length - 1];
-  const qwen = data.meta?.tokenizer_files?.find((f) => f.repo_id === "Qwen/Qwen2.5-7B-Instruct");
-  const vocab = qwen?.vocab_file_sha256?.slice(0, 10) ?? "ca10d7e9fb";
-  const worstTok = shortNameFor(priciest.tokenizer);
-  const countStart = max.toFixed(2);
-
+export function renderMeaningTable(data) {
+  const lang = getLang();
+  const rows = sliceRows(data, "flores");
+  const idAt1k = o200kIdTokensAt1k(data);
+  const body = rows
+    .map((row) => {
+      const per1k = Math.round(BASELINE_EN * row.displayRatio);
+      const product = escapeHtml(productNameFor(row.tokenizer, lang));
+      const tech = escapeHtml(technicalIdFor(row.tokenizer));
+      return `<tr data-tok="${escapeHtml(row.tokenizer)}">
+        <td><strong>${product}</strong> <span class="mono muted tech-id">/ ${tech}</span></td>
+        <td class="num">${fmtCount(per1k)}</td>
+        <td class="num">${fmtRatio(row.displayRatio, 2)}</td>
+      </tr>`;
+    })
+    .join("");
   return `
-    <section class="sect sect-tax reveal" aria-labelledby="tax-label">
-      <p class="sect-num" id="tax-label"><span class="sect-num-k">01</span> — The tax</p>
-      <div class="hero-grid">
-        <div class="hero-metric">
-          <p class="hero-ratio" aria-label="Up to ${fmtRatio(max, 2)} times more tokens than English">
-            <span class="hero-ratio-val" data-count-to="${max.toFixed(4)}" data-count-suffix="×">${countStart}×</span>
-          </p>
-          <p class="hero-range muted">Across seven tokenizers on FLORES-200: <strong class="num">${fmtRatio(min, 2)}–${fmtRatio(max, 2)}</strong></p>
-        </div>
-        <div class="hero-copy prose-narrow">
-          <p class="hero-lede">
-            Indonesian costs this many times the tokens of English on <strong>${escapeHtml(worstTok)}</strong>,
-            even though it uses ~10% fewer words.
-          </p>
-          <ul class="hero-facts">
-            <li><span class="num">${pairsLabel}</span> parallel FLORES pairs · <span class="num">7</span> tokenizers · word ratio ~<span class="num">${fmtRatio(wordRatio, 2)}</span> (fewer ID words)</li>
-            <li>Cheapest: <strong>${escapeHtml(shortNameFor(cheapest.tokenizer))}</strong> <span class="num">${fmtRatio(cheapest.displayRatio, 2)}</span> · <span class="num mono">${fmtInt(cheapest.displayExtra)}</span> extra / 1M EN tokens</li>
-            <li>Priciest: <strong>${escapeHtml(shortNameFor(priciest.tokenizer))}</strong> <span class="num">${fmtRatio(priciest.displayRatio, 2)}</span> · <span class="num mono">${fmtInt(priciest.displayExtra)}</span> extra / 1M EN tokens</li>
-            <li>Qwen2.5 and Sailor2 share <code>vocab.json</code> (<code class="mono">${vocab}…</code>); identical token counts here</li>
-          </ul>
-        </div>
-      </div>
-      <div class="hero-strip" id="hero-strip" aria-live="polite">
-        <p class="strip-loading muted" id="strip-status">Loading token strip…</p>
-      </div>
-    </section>`;
+    <p class="meaning-lead" data-i18n="meaningLead">${t("meaningLead")}</p>
+    <p class="meaning-example" id="meaning-example">${t("meaningExample", { idTokens: fmtCount(idAt1k) })}</p>
+    <div class="table-scroll">
+      <table class="meaning-table" aria-labelledby="meaning-table-caption">
+        <caption id="meaning-table-caption" class="sr-only">${t("meaningTableCaption")}</caption>
+        <thead>
+          <tr>
+            <th scope="col">${t("meaningColTool")}</th>
+            <th scope="col" class="num">${t("meaningColIdPer1k")}</th>
+            <th scope="col" class="num">${t("meaningColRatio")}</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>`;
+}
+
+export function renderHeroRange(data) {
+  const { min, max } = floresRange(data);
+  return t("heroRange", { min: fmtRatio(min, 2), max: fmtRatio(max, 2) });
+}
+
+export function mountHeroEnhancements(data) {
+  const rangeEl = document.getElementById("hero-range");
+  if (rangeEl) rangeEl.textContent = renderHeroRange(data);
+
+  const meaning = document.getElementById("meaning-body");
+  if (meaning) meaning.innerHTML = renderMeaningTable(data);
 }
 
 export async function mountHeroStrip() {
   const wrap = document.getElementById("hero-strip");
-  const status = document.getElementById("strip-status");
   if (!wrap) return;
   try {
     const res = await fetch("hero-strip.json");
     const data = await res.json();
-    const strips = data.strips ?? [
-      {
-        short_name: data.source?.tokenizer ?? "o200k_base",
-        en_pieces: data.en_pieces,
-        id_pieces: data.id_pieces,
-        en_count: data.en_count,
-        id_count: data.id_count,
-      },
-    ];
-    const pairIndex = data.source?.pair_index ?? data.pair_index ?? 0;
+    const strips = data.strips ?? [];
+    const pairIndex = data.source?.pair_index ?? 67;
     wrap.innerHTML = strips
       .map((s) => renderStripFigure(s, pairIndex, data.id_text, data.en_text))
       .join("");
   } catch {
-    if (status) status.textContent = "Token strip unavailable (run prebuild).";
-    else wrap.innerHTML = `<p class="muted">Token strip unavailable (run prebuild).</p>`;
+    wrap.innerHTML = `<p class="muted">Potongan kata tidak tersedia.</p>`;
   }
+}
+
+export function repaintStripsOnLang() {
+  mountHeroStrip();
 }

@@ -1,116 +1,218 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preload" href="%BASE_URL%fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="%BASE_URL%favicon.ico" sizes="48x48" />
-    <title>Indonesian Token Tax</title>
+    <title>Pajak token bahasa Indonesia</title>
     <meta
       name="description"
-      content="Compare how many more tokens Indonesian text uses than English across seven LLM tokenizers. Runs in your browser; your text stays on your device."
+      content="Untuk makna yang sama, teks Indonesia sering memakai 25–84% lebih banyak token daripada bahasa Inggris. Diukur di browser Anda; teks tidak dikirim ke mana pun."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Indonesian Token Tax" />
+    <meta property="og:title" content="Pajak token bahasa Indonesia" />
     <meta
       property="og:description"
-      content="Indonesian uses fewer words than English on FLORES-200, yet still costs more tokens. Measured in the browser."
+      content="Di ChatGPT (GPT-4o), Indonesia memakai sekitar 1,25× token. Sampai 1,84× di Mistral — padahal kata Indonesia lebih sedikit."
     />
     <meta property="og:image" content="%BASE_URL%og.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Indonesian Token Tax" />
+    <meta name="twitter:title" content="Pajak token bahasa Indonesia" />
     <meta
       name="twitter:description"
-      content="Token multipliers for Indonesian vs English on popular LLM tokenizers."
+      content="Perbandingan token Indonesia vs Inggris di tujuh alat populer."
     />
     <meta name="twitter:image" content="%BASE_URL%og.png" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main" data-i18n="skip">Lewati ke konten</a>
     <header class="topbar">
-      <p class="site-title">Indonesian Token Tax</p>
-      <button type="button" id="theme-toggle" class="theme-btn" aria-pressed="false">
-        Dark mode
-      </button>
+      <p class="site-title" data-i18n="siteTitle">Pajak token bahasa Indonesia</p>
+      <div class="topbar-actions">
+        <button type="button" id="lang-toggle" class="lang-btn" aria-label="Ganti bahasa">EN</button>
+        <button type="button" id="theme-toggle" class="theme-btn" aria-pressed="false" data-i18n="themeDark">
+          Mode gelap
+        </button>
+      </div>
     </header>
     <main id="main" class="page">
-      <div id="hero"></div>
-
-      <section id="leaderboard" class="sect reveal" aria-labelledby="board-label">
-        <p class="sect-num" id="board-label"><span class="sect-num-k">02</span> — Leaderboard</p>
-        <div class="slice-wrap block-quiet">
-          <span class="slice-label" id="slice-label">Slice</span>
-          <div class="segmented" id="slice-group" role="radiogroup" aria-labelledby="slice-label">
-            <button type="button" role="radio" data-slice="flores" aria-checked="true">FLORES</button>
-            <button type="button" role="radio" data-slice="domain" aria-checked="false">Domain</button>
-            <button type="button" role="radio" data-slice="informal" aria-checked="false">Informal</button>
-            <button type="button" role="radio" data-slice="informal_matched" aria-checked="false">Informal length-matched</button>
-          </div>
+      <section id="hero" class="sect sect-hero reveal" aria-labelledby="hero-headline">
+        <h1 id="hero-headline" class="hero-headline" data-i18n="heroHeadline">
+          Di ChatGPT (GPT-4o), teks Indonesia memakai 1,25× token dibanding bahasa Inggris — sekitar 25% lebih. Di
+          Mistral, sampai 1,84× (~84% lebih).
+        </h1>
+        <div class="hero-metric-block">
+          <p class="hero-ratio" aria-labelledby="hero-metric-aria">
+            <span
+              id="hero-metric-aria"
+              class="sr-only"
+              data-i18n="heroMetricLabel"
+              >ChatGPT (GPT-4o): 1,25× token dibanding bahasa Inggris</span
+            >
+            <span
+              class="hero-ratio-val"
+              data-count-to="1.2461"
+              data-count-suffix="×"
+              data-count-locale="id"
+              >1,25×</span
+            >
+          </p>
+          <p class="hero-range muted" id="hero-range">Tujuh alat populer, data terjemahan formal: 1,25×–1,84×</p>
         </div>
-        <p class="slice-caveat muted" id="slice-caveat"></p>
-        <div id="board-chart"></div>
-        <div id="board-table"></div>
-        <div id="calculator"></div>
       </section>
 
-      <section id="try" class="sect reveal" aria-labelledby="try-label">
-        <p class="sect-num" id="try-label"><span class="sect-num-k">03</span> — Try it</p>
-        <p class="muted privacy prose-narrow">
-          This page runs entirely in your browser. Typed text is not sent anywhere. Tokenizer files load from
-          huggingface.co on the first Tokenize click. No analytics.
+      <section id="meaning" class="sect reveal" aria-labelledby="meaning-title">
+        <h2 id="meaning-title" class="h2" data-i18n="meaningTitle">Apa artinya buat saya?</h2>
+        <div id="meaning-body" class="meaning-body">
+          <p class="meaning-lead" data-i18n="meaningLead">Untuk makna yang sama, Anda ditagih 25–84% lebih banyak token.</p>
+          <p class="meaning-example" id="meaning-example">
+            1.000 token bahasa Inggris makna ≈ 1.246 token Indonesia di ChatGPT (GPT-4o).
+          </p>
+          <div class="table-scroll">
+            <table class="meaning-table">
+              <thead>
+                <tr>
+                  <th scope="col">Alat</th>
+                  <th scope="col" class="num">Token Indonesia / 1.000 EN</th>
+                  <th scope="col" class="num">Perbandingan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>ChatGPT (GPT-4o)</strong> <span class="mono muted tech-id">/ o200k_base</span></td><td class="num">1.246</td><td class="num">1,25×</td></tr>
+                <tr><td><strong>DeepSeek</strong> <span class="mono muted tech-id">/ DeepSeek-V3</span></td><td class="num">1.346</td><td class="num">1,35×</td></tr>
+                <tr><td><strong>SEA-LION</strong> <span class="mono muted tech-id">/ SEA-LION v3</span></td><td class="num">1.538</td><td class="num">1,54×</td></tr>
+                <tr><td><strong>Qwen</strong> <span class="mono muted tech-id">/ Qwen2.5</span></td><td class="num">1.539</td><td class="num">1,54×</td></tr>
+                <tr><td><strong>Sailor</strong> <span class="mono muted tech-id">/ Sailor2</span></td><td class="num">1.539</td><td class="num">1,54×</td></tr>
+                <tr><td><strong>ChatGPT (GPT-4)</strong> <span class="mono muted tech-id">/ cl100k_base</span></td><td class="num">1.548</td><td class="num">1,55×</td></tr>
+                <tr><td><strong>Mistral</strong> <span class="mono muted tech-id">/ Mistral v0.3</span></td><td class="num">1.840</td><td class="num">1,84×</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="strips" class="sect reveal" aria-labelledby="strips-title">
+        <h2 id="strips-title" class="h2" data-i18n="stripsTitle">Apa itu potongan kata?</h2>
+        <p class="strips-lede prose-narrow" data-i18n="stripsLead">
+          Satu token adalah potongan kata — teks dipotong menjadi bagian-bagian kecil untuk dihitung.
         </p>
-        <div class="chips" id="examples" aria-label="Example sentences"></div>
+        <div class="hero-strip" id="hero-strip" aria-live="polite"></div>
+      </section>
+
+      <section id="leaderboard" class="sect reveal" aria-labelledby="board-title">
+        <h2 id="board-title" class="h2" data-i18n="boardTitle">Tujuh alat, dari termurah ke termahal</h2>
+        <div id="board-chart"></div>
+        <div id="board-table"></div>
+      </section>
+
+      <section id="try" class="sect reveal" aria-labelledby="try-title">
+        <h2 id="try-title" class="h2" data-i18n="tryTitle">Coba sendiri</h2>
+        <p class="muted privacy prose-narrow" data-i18n="tryPrivacy">
+          Halaman ini berjalan sepenuhnya di browser Anda. Teks yang Anda ketik tidak dikirim ke mana pun. File
+          penghitung kata dimuat dari huggingface.co saat pertama kali Anda menekan Potong. Tanpa analitik.
+        </p>
+        <div class="chips" id="examples" aria-label="Contoh kalimat"></div>
         <div class="try-fields">
-          <label for="id-text">Indonesian</label>
+          <label for="id-text" data-i18n="tryLabelId">Indonesia</label>
           <p class="field-meta muted" id="id-meta"></p>
-          <textarea id="id-text" class="cmd-field" autocomplete="off" spellcheck="false" rows="3">Aku gk sempet ngerjain PR, nanti aja ya.</textarea>
-          <label for="en-text">English</label>
+          <textarea id="id-text" class="cmd-field" autocomplete="off" spellcheck="false" rows="3"
+            >Aku gk sempet ngerjain PR, nanti aja ya.</textarea
+          >
+          <label for="en-text" data-i18n="tryLabelEn">Inggris</label>
           <p class="field-meta muted" id="en-meta"></p>
-          <textarea id="en-text" class="cmd-field" autocomplete="off" spellcheck="false" rows="3">I didn't have time to do the homework; later, okay?</textarea>
+          <textarea id="en-text" class="cmd-field" autocomplete="off" spellcheck="false" rows="3"
+            >I didn't have time to do the homework; later, okay?</textarea
+          >
         </div>
         <div class="try-actions">
-          <button class="primary" id="tokenize" type="button">Tokenize</button>
-          <label class="toggle-en"><input type="checkbox" id="show-en" /> Show English spans</label>
+          <button class="primary" id="tokenize" type="button" data-i18n="tryTokenize">Potong kata</button>
+          <label class="toggle-en"
+            ><input type="checkbox" id="show-en" />
+            <span data-i18n="tryShowEn">Tampilkan potongan Inggris</span></label
+          >
         </div>
-        <p class="muted small">Tokenizers load on the first click (tokenizer files only, no model weights). Cmd/Ctrl+Enter to tokenize.</p>
+        <p class="muted small" data-i18n="tryHint">
+          Penghitung dimuat saat klik pertama (hanya file tokenizer, tanpa bobot model). Cmd/Ctrl+Enter untuk memotong.
+        </p>
         <div id="try-out"></div>
       </section>
 
-      <section id="method" class="sect prose reveal" aria-labelledby="method-label">
-        <p class="sect-num" id="method-label"><span class="sect-num-k">04</span> — Method</p>
-        <p>
-          Each pair is encoded as raw text with <code>add_special_tokens=false</code> (no chat template).
-          The tax is <code>sum(Indonesian tokens) / sum(English tokens)</code>. A bootstrap 95% CI resamples pairs
-          1000 times with seed 42. Leaderboard numbers are copied from the Python pipeline’s
-          <code>results/results.json</code>.
+      <section id="method" class="sect prose reveal" aria-labelledby="method-title">
+        <h2 id="method-title" class="h2" data-i18n="methodTitle">Metode &amp; data</h2>
+        <p data-i18n="methodLead">
+          Setiap pasangan kalimat dihitung sebagai teks mentah (tanpa template chat). Pajak = jumlah token Indonesia ÷
+          jumlah token Inggris. Data utama: FLORES-200 (1.012 pasang terjemahan formal). Selang 95% dari bootstrap 1.000
+          kali (seed 42).
         </p>
-        <h2 class="h3" id="limitations">Limitations</h2>
+        <details class="method-details">
+          <summary data-i18n="methodDetails">Detail teknis &amp; irisan lain</summary>
+          <p data-i18n="methodTech">
+            Pengodean dengan add_special_tokens=false. Angka papan peringkat disalin dari pipeline Python
+            (results/results.json). Rasio kata ID/EN di FLORES ~0,90 — artinya Indonesia bukan teks yang lebih panjang.
+          </p>
+          <p data-i18n="qwenSailorNote">Qwen dan Sailor memakai vocab.json yang sama; hitungan token identik di sini.</p>
+          <p class="muted" data-i18n="methodSlices">Irisan sintetis (ilustrasi, contoh kecil):</p>
+          <div class="slice-wrap block-quiet">
+            <div class="segmented" id="method-slice-group" role="radiogroup">
+              <button type="button" role="radio" data-slice="flores" aria-checked="true" data-i18n="sliceFlores">
+                FLORES-200
+              </button>
+              <button type="button" role="radio" data-slice="domain" aria-checked="false" data-i18n="sliceDomain">
+                Domain (n≈30)
+              </button>
+              <button type="button" role="radio" data-slice="informal" aria-checked="false" data-i18n="sliceInformal">
+                Informal (n≈40)
+              </button>
+              <button
+                type="button"
+                role="radio"
+                data-slice="informal_matched"
+                aria-checked="false"
+                data-i18n="sliceInformalMatched"
+              >
+                Informal panjang disamakan (n≈40)
+              </button>
+            </div>
+          </div>
+          <div id="method-slice-table" class="table-scroll"></div>
+        </details>
+        <h3 class="h3" id="limitations" data-i18n="limitationsTitle">Keterbatasan</h3>
         <ul>
-          <li>FLORES-200 is professionally translated, news-like, formal. Chat and slang are only the small synthetic slices.</li>
-          <li>Synthetic slices are small; their CIs are wide. Treat them as illustrations.</li>
-          <li>A ratio above 1 can come from the tokenizer or from Indonesian using more words than the English reference. Check the word-ratio column.</li>
-          <li>This page does not evaluate generation quality.</li>
+          <li data-i18n="lim1">
+            FLORES-200 adalah terjemahan profesional, mirip berita, formal. Obrolan dan gaul hanya dari irisan sintetis
+            kecil.
+          </li>
+          <li data-i18n="lim2">Irisan sintetis kecil; selang kepercayaannya lebar. Anggap sebagai ilustrasi.</li>
+          <li data-i18n="lim3">
+            Rasio di atas 1 bisa dari cara pemotong kata atau dari Indonesia yang memakai lebih banyak kata daripada
+            referensi Inggris. Cek kolom rasio kata.
+          </li>
+          <li data-i18n="lim4">Halaman ini tidak menilai kualitas jawaban model.</li>
         </ul>
       </section>
 
       <footer class="site-footer">
         <div class="footer-cols">
           <div>
-            <p class="footer-head">On this page</p>
-            <p><a href="#method">Method</a> · <a href="#limitations">Limitations</a></p>
+            <p class="footer-head" data-i18n="footerOnPage">Di halaman ini</p>
             <p>
-              <a href="https://github.com/adindamochamad/indonesian-token-tax" rel="noopener noreferrer">
-                GitHub source
-              </a>
+              <a href="#method" data-i18n="footerMethod">Metode</a> ·
+              <a href="#limitations" data-i18n="footerLimitations">Keterbatasan</a>
+            </p>
+            <p>
+              <a href="https://github.com/adindamochamad/indonesian-token-tax" rel="noopener noreferrer" data-i18n="footerSource"
+                >Kode sumber GitHub</a
+              >
             </p>
           </div>
           <div>
-            <p class="footer-head">Author</p>
+            <p class="footer-head" data-i18n="footerAuthor">Penulis</p>
             <p>
               <a href="https://adindamochamad.com" rel="noopener noreferrer">Adinda Panca Mochamad</a>
             </p>
-            <p class="muted small">Built with transformers.js + js-tiktoken</p>
+            <p class="muted small" data-i18n="footerBuilt">Dibangun dengan transformers.js + js-tiktoken</p>
           </div>
         </div>
       </footer>

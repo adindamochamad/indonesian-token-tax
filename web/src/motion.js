@@ -38,7 +38,8 @@ export function initMotion() {
       const t = Math.min(1, (now - start) / duration);
       const eased = 1 - (1 - t) ** 3;
       const val = from + (target - from) * eased;
-      heroNum.textContent = `${val.toFixed(2)}${suffix}`;
+      const display = heroNum.dataset.countLocale === "id" ? val.toFixed(2).replace(".", ",") : val.toFixed(2);
+      heroNum.textContent = `${display}${suffix}`;
       if (t < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);

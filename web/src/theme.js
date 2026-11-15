@@ -1,3 +1,5 @@
+import { t } from "./i18n.js";
+
 const KEY = "itt-theme";
 
 export function initTheme() {
@@ -10,13 +12,13 @@ export function initTheme() {
   const btn = document.getElementById("theme-toggle");
   if (btn) {
     btn.setAttribute("aria-pressed", String(theme === "dark"));
-    btn.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+    btn.textContent = theme === "dark" ? t("themeLight") : t("themeDark");
     btn.addEventListener("click", () => {
       const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
       applyTheme(next);
       localStorage.setItem(KEY, next);
       btn.setAttribute("aria-pressed", String(next === "dark"));
-      btn.textContent = next === "dark" ? "Light mode" : "Dark mode";
+      btn.textContent = next === "dark" ? t("themeLight") : t("themeDark");
     });
   }
 }

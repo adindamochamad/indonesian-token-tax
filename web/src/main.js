@@ -1,21 +1,17 @@
-import { TOKENIZER_SPECS } from "./specs.js";
-import {
-  sliceRows,
-  sliceCaveat,
-  renderChart,
-  renderTable,
-  renderCalculator,
-  updateCalculator,
-} from "./leaderboard.js";
-import { renderHero, mountHeroStrip } from "./hero.js";
+import { TOKENIZER_SPECS, productNameFor } from "./specs.js";
+import { sliceRows, renderChart, renderTable, renderMethodSliceTable } from "./leaderboard.js";
+import { mountHeroEnhancements, mountHeroStrip, repaintStripsOnLang } from "./hero.js";
 import { initTheme } from "./theme.js";
 import { initMotion } from "./motion.js";
+import { initLang, t } from "./i18n.js";
 import {
   bindExampleChips,
   bindTryCounters,
   loadTryText,
   persistTryText,
-  EXAMPLES,
+  renderExampleChips,
+  renderGuessPanel,
+  hideGuessPanel,
   renderRankedList,
   renderDetailRow,
 } from "./try.js";
@@ -25,27 +21,46 @@ import "./styles.css";
 const state = {
   data: null,
   sort: { key: "displayRatio", dir: "asc" },
-  slice: "flores",
   runtime: null,
   tokenizing: false,
+  methodSlice: "flores",
 };
 
 async function boot() {
+  initLang();
   initTheme();
   const res = await fetch("results.json");
   state.data = await res.json();
-  document.getElementById("hero").innerHTML = renderHero(state.data);
-  document.getElementById("examples").innerHTML = EXAMPLES.map(
-    (ex, i) => `<button type="button" class="chip" data-example="${i}">${ex.label}</button>`,
-  ).join("");
+
+  document.getElementById("examples").innerHTML = renderExampleChips();
+  const tryOut = document.getElementById("try-out");
+  if (tryOut && !document.getElementById("guess-panel")) {
+    tryOut.insertAdjacentHTML("afterbegin", renderGuessPanel());
+  }
+
   bind();
   loadTryText();
   bindTryCounters();
   bindExampleChips();
   paintLeaderboard();
+  mountHeroEnhancements(state.data);
   window.addEventListener("resize", () => updateTableScrollFades());
   await mountHeroStrip();
   initMotion();
+
+  window.addEventListener("itt:lang", () => {
+    document.getElementById("examples").innerHTML = renderExampleChips();
+    paintLeaderboard();
+    mountHeroEnhancements(state.data);
+    repaintStripsOnLang();
+    paintMethodSlices();
+    if (state.lastTry) paintTryResults(state.lastTry);
+    const themeBtn = document.getElementById("theme-toggle");
+    if (themeBtn) {
+      const dark = document.documentElement.dataset.theme === "dark";
+      themeBtn.textContent = dark ? t("themeLight") : t("themeDark");
+    }
+  });
 
   const params = new URLSearchParams(location.search);
   if (params.get("run") === "1" || params.get("tab") === "try") {
@@ -56,16 +71,11 @@ async function boot() {
   }
 }
 
+function getLangFromDom() {
+  return document.documentElement.lang === "en" ? "en" : "id";
+}
+
 function bind() {
-  document.getElementById("slice-group")?.addEventListener("click", (ev) => {
-    const btn = ev.target.closest("button[data-slice]");
-    if (!btn) return;
-    state.slice = btn.dataset.slice;
-    document.querySelectorAll("#slice-group button").forEach((b) => {
-      b.setAttribute("aria-checked", String(b === btn));
-    });
-    paintLeaderboard();
-  });
   document.getElementById("board-table")?.addEventListener("click", (ev) => {
     const th = ev.target.closest("th[data-sort]");
     if (!th) return;
@@ -77,15 +87,27 @@ function bind() {
     }
     paintLeaderboard();
   });
-  document.getElementById("calculator")?.addEventListener("input", (ev) => {
-    if (ev.target.id === "en-tokens") updateCalculator();
-  });
   document.getElementById("tokenize")?.addEventListener("click", () => onTokenize());
   document.getElementById("show-en")?.addEventListener("change", () => {
     if (state.lastTry) paintTryResults(state.lastTry);
   });
   document.getElementById("id-text")?.addEventListener("keydown", tokenizeShortcut);
   document.getElementById("en-text")?.addEventListener("keydown", tokenizeShortcut);
+
+  document.getElementById("method-slice-group")?.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("button[data-slice]");
+    if (!btn) return;
+    state.methodSlice = btn.dataset.slice;
+    document.querySelectorAll("#method-slice-group button").forEach((b) => {
+      b.setAttribute("aria-checked", String(b === btn));
+    });
+    paintMethodSlices();
+  });
+
+  document.getElementById("try-out")?.addEventListener("click", (ev) => {
+    const guess = ev.target.closest(".guess-btn");
+    if (guess) hideGuessPanel();
+  });
 }
 
 function tokenizeShortcut(ev) {
@@ -96,13 +118,17 @@ function tokenizeShortcut(ev) {
 }
 
 function paintLeaderboard() {
-  const rows = sliceRows(state.data, state.slice);
-  document.getElementById("slice-caveat").textContent = sliceCaveat(state.slice);
+  if (!state.data) return;
+  const rows = sliceRows(state.data, "flores");
   document.getElementById("board-chart").innerHTML = renderChart(rows);
   document.getElementById("board-table").innerHTML = renderTable(rows, state.sort);
-  document.getElementById("calculator").innerHTML = renderCalculator(rows);
-  const input = document.getElementById("en-tokens");
-  if (input) updateCalculator();
+  requestAnimationFrame(() => updateTableScrollFades());
+}
+
+function paintMethodSlices() {
+  if (!state.data) return;
+  const el = document.getElementById("method-slice-table");
+  if (el) el.innerHTML = renderMethodSliceTable(state.data, state.methodSlice);
   requestAnimationFrame(() => updateTableScrollFades());
 }
 
@@ -117,9 +143,9 @@ async function onTokenize() {
   if (state.tokenizing) return;
   state.tokenizing = true;
   persistTryText();
+  hideGuessPanel();
   const idText = document.getElementById("id-text").value;
   const enText = document.getElementById("en-text").value;
-  const showEn = document.getElementById("show-en")?.checked;
   const out = document.getElementById("try-out");
   const runtime = await getRuntime();
   const rows = TOKENIZER_SPECS.map((spec) => ({
@@ -134,7 +160,9 @@ async function onTokenize() {
     error: null,
   }));
   state.lastTry = { rows, showEn: false };
-  out.innerHTML = `<div id="try-compare"></div><div id="try-details"></div>`;
+  if (!document.getElementById("try-compare")) {
+    out.insertAdjacentHTML("beforeend", `<div id="try-compare"></div><div id="try-details"></div>`);
+  }
   paintTryResults(state.lastTry);
 
   for (let i = 0; i < TOKENIZER_SPECS.length; i += 1) {
@@ -167,11 +195,12 @@ function paintTryResults({ rows, showEn }) {
   const compare = document.getElementById("try-compare");
   const details = document.getElementById("try-details");
   if (!compare || !details) return;
+  const lang = getLangFromDom();
   const compData = rows
     .filter((r) => r.status === "done")
     .map((r) => ({
       spec: r.spec,
-      shortName: r.spec.shortName,
+      productName: productNameFor(r.spec.name, lang),
       idN: r.idN,
       enN: r.enN,
       ratio: r.ratio,
@@ -179,20 +208,13 @@ function paintTryResults({ rows, showEn }) {
   const maxRatio = Math.max(...compData.map((r) => r.ratio ?? 0), 1.01);
   compare.innerHTML =
     compData.length > 0
-      ? `<h2 class="h3 try-compare-title">Comparison</h2>${renderRankedList(compData, maxRatio)}`
+      ? `<h2 class="h3 try-compare-title">${t("tryCompareTitle")}</h2>${renderRankedList(compData, maxRatio)}`
       : "";
   details.innerHTML = rows
     .map((r, i) =>
-      renderDetailRow(
-        r.spec,
-        r,
-        r.idPieces,
-        r.enPieces,
-        showEn,
-        i === 0,
-      ),
+      renderDetailRow(r.spec, r, r.idPieces, r.enPieces, showEn, i === 0),
     )
     .join("");
 }
 
-boot();
+boot().then(() => paintMethodSlices());

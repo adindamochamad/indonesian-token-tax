@@ -17,12 +17,12 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
   <rect width="1200" height="630" fill="#f4f6f8"/>
   <text x="80" y="120" font-family="system-ui,sans-serif" font-size="42" fill="#4a5568">Indonesian Token Tax</text>
   <text x="80" y="280" font-family="system-ui,sans-serif" font-size="64" font-weight="700" fill="#1a1d21">
-    Indonesian costs ${minL}×–${maxL}× the tokens of English
+    ChatGPT (GPT-4o): ${minL}× tokens · up to ${maxL}× on Mistral
   </text>
   <text x="80" y="360" font-family="system-ui,sans-serif" font-size="36" fill="#4a5568">
-    …even though Indonesian uses ~10% fewer words.
+    Same meaning in Indonesian — 25–84% more tokens than English.
   </text>
-  <text x="80" y="520" font-family="system-ui,sans-serif" font-size="28" fill="#1d6b8a">Measured in your browser · 7 tokenizers · FLORES-200</text>
+  <text x="80" y="520" font-family="system-ui,sans-serif" font-size="28" fill="#1d6b8a">Measured in your browser · 7 popular tools</text>
 </svg>`;
 
 const svgPath = resolve(root, "web/public/og.svg");

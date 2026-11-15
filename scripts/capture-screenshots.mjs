@@ -45,7 +45,7 @@ for (const s of shots) {
   } else if (s.where === "top") {
     await page.evaluate(() => window.scrollTo(0, 0));
   }
-  const name = `redesign-${s.w}-${s.theme}-${s.where}.png`;
+  const name = `redesign2-${s.w}-${s.theme}-${s.where}.png`;
   await page.screenshot({ path: resolve(outDir, name), fullPage: true });
   console.log("wrote", name);
   await page.close();
