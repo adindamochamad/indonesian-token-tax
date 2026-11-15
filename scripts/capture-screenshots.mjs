@@ -8,7 +8,7 @@ const { chromium } = require("playwright-core");
 
 const defaultOut = "/Users/mac/Development/indonesian-token-tax/web/screenshots";
 const outDir = process.argv[2] ? resolve(process.argv[2]) : defaultOut;
-const previewPort = process.env.PREVIEW_PORT ?? "4174";
+const previewPort = process.env.PREVIEW_PORT ?? "4173";
 const previewOrigin = `http://127.0.0.1:${previewPort}`;
 mkdirSync(outDir, { recursive: true });
 
@@ -29,6 +29,7 @@ const shots = [
 const browser = await chromium.launch({ executablePath: chrome, headless: true });
 for (const s of shots) {
   const page = await browser.newPage({ viewport: { width: s.w, height: 900 } });
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const q = new URLSearchParams();
   if (s.run) q.set("run", "1");
   q.set("theme", s.theme);

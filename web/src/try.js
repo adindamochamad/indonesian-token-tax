@@ -95,27 +95,34 @@ export function renderComparisonRow(spec, idN, enN) {
   };
 }
 
+function accentTiers(sorted) {
+  const ratios = sorted.map((r) => r.ratio).filter((x) => x != null && Number.isFinite(x));
+  if (ratios.length === 0) return { accentMin: null, accentMax: null };
+  const accentMin = Math.min(...ratios);
+  const accentMax = Math.max(...ratios);
+  if (accentMin === accentMax) return { accentMin: null, accentMax: null };
+  return { accentMin, accentMax };
+}
+
 export function renderRankedList(rows, maxRatio) {
   const sorted = [...rows].sort((a, b) => (a.ratio ?? 0) - (b.ratio ?? 0));
-  const best = sorted[0]?.ratio;
-  const worst = sorted[sorted.length - 1]?.ratio;
+  const { accentMin, accentMax } = accentTiers(sorted);
   const items = sorted
     .map((r) => {
       const pct = r.ratio == null ? 0 : (r.ratio / maxRatio) * 100;
-      const tier =
-        r.ratio != null && r.ratio === best
-          ? "rank-best"
-          : r.ratio != null && r.ratio === worst
-            ? "rank-worst"
-            : "";
+      const atMin = accentMin != null && r.ratio === accentMin;
+      const atMax = accentMax != null && r.ratio === accentMax;
+      const tier = atMin ? "rank-best" : atMax ? "rank-worst" : "";
+      const nums = `ID ${r.idN} · EN ${r.enN ?? "—"} · ${r.ratio == null ? "—" : fmtRatio(r.ratio, 2)}`;
       return `<li class="rank-row ${tier}">
         <span class="rank-name">${r.shortName}</span>
         <span class="rank-bar" role="presentation"><span class="rank-bar-fill" style="width:${pct.toFixed(1)}%"></span></span>
-        <span class="rank-nums num mono"><span class="rank-id">${r.idN}</span> · <span class="rank-en">${r.enN ?? "—"}</span> · <span class="rank-ratio">${r.ratio == null ? "—" : fmtRatio(r.ratio, 2)}</span></span>
+        <span class="rank-nums num mono" aria-label="${nums}">${nums}</span>
       </li>`;
     })
     .join("");
-  return `<ol class="try-ranked" aria-label="Token counts ranked by ID/EN ratio">${items}</ol>`;
+  return `<p id="try-ranked-head" class="sr-only">Tokenizer, Indonesian tokens, English tokens, ID/EN ratio</p>
+    <ol class="try-ranked" aria-labelledby="try-ranked-head">${items}</ol>`;
 }
 
 export function renderDetailRow(spec, state, idPieces, enPieces, showEn, open) {

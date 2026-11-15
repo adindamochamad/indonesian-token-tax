@@ -108,11 +108,10 @@ export function renderChart(rows) {
 
 const COLS = [
   { key: "shortName", label: "Tokenizer", num: false },
-  { key: "displayRatio", label: "ID/EN tokens", num: true, ratio: true },
-  { key: "displayLo", label: "95% CI low", num: true, hidden: "compact" },
-  { key: "displayHi", label: "95% CI high", num: true, hidden: "compact" },
+  { key: "displayRatio", label: "ID/EN tokens", num: true },
+  { key: "ci", label: "95% CI", num: true, sortKey: "displayLo" },
   { key: "displayWord", label: "ID/EN words", num: true },
-  { key: "displayExtra", label: "Extra / 1M EN", num: true, int: true },
+  { key: "displayExtra", label: "Extra per 1M EN tokens", num: true },
 ];
 
 export function renderTable(rows, sort) {
@@ -128,12 +127,10 @@ export function renderTable(rows, sort) {
   }
   const bestTok = rows[0]?.tokenizer;
   const worstTok = rows[rows.length - 1]?.tokenizer;
-  const head = COLS.filter((c) => c.hidden !== "compact")
-    .map(
-      (c) =>
-        `<th scope="col" class="${c.num ? "num" : ""}" data-sort="${c.key}">${c.label}<span class="sort" aria-hidden="true"></span></th>`,
-    )
-    .join("");
+  const head = COLS.map(
+    (c) =>
+      `<th scope="col" class="${c.num ? "num" : ""}" data-sort="${c.sortKey ?? c.key}">${c.label}<span class="sort" aria-hidden="true"></span></th>`,
+  ).join("");
   const body = sorted
     .map((row) => {
       const tier =
@@ -173,7 +170,7 @@ export function renderCalculator(rows) {
     <input type="number" id="en-tokens" min="0" step="1000" value="1000000" inputmode="numeric" />
     <div class="table-scroll">
       <table class="calc-table">
-        <thead><tr><th>Tokenizer</th><th class="num">Indonesian tokens</th></tr></thead>
+        <thead><tr><th scope="col">Tokenizer</th><th scope="col" class="num">Indonesian tokens</th></tr></thead>
         <tbody id="calc-body">${body}</tbody>
       </table>
     </div>

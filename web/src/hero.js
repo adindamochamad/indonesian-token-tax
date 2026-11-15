@@ -22,6 +22,28 @@ function renderTokenBlocks(pieces, lang) {
     .join("");
 }
 
+function renderStripFigure(strip, pairIndex, idText, enText) {
+  const enBlocks = renderTokenBlocks(strip.en_pieces, "en");
+  const idBlocks = renderTokenBlocks(strip.id_pieces, "id");
+  return `<figure class="strip-unit" aria-labelledby="strip-${strip.short_name.replace(/\s+/g, "-")}">
+    <figcaption id="strip-${strip.short_name.replace(/\s+/g, "-")}" class="strip-caption">
+      <strong>${escapeHtml(strip.short_name)}</strong> · pair #${pairIndex} · <code>add_special_tokens=false</code>
+    </figcaption>
+    <div class="strip-row">
+      <span class="strip-lang">EN</span>
+      <span class="strip-text muted">${escapeHtml(enText)}</span>
+      <span class="strip-count num mono">${strip.en_count}</span>
+    </div>
+    <div class="strip-blocks strip-blocks-en" aria-hidden="true">${enBlocks}</div>
+    <div class="strip-row">
+      <span class="strip-lang">ID</span>
+      <span class="strip-text muted">${escapeHtml(idText)}</span>
+      <span class="strip-count num mono">${strip.id_count}</span>
+    </div>
+    <div class="strip-blocks strip-blocks-id" aria-hidden="true">${idBlocks}</div>
+  </figure>`;
+}
+
 export function renderHero(data) {
   const { min, max, rows, wordRatio } = floresRange(data);
   const nPairs = Number(data.meta?.slices?.flores?.n_pairs ?? 1012);
@@ -31,6 +53,7 @@ export function renderHero(data) {
   const qwen = data.meta?.tokenizer_files?.find((f) => f.repo_id === "Qwen/Qwen2.5-7B-Instruct");
   const vocab = qwen?.vocab_file_sha256?.slice(0, 10) ?? "ca10d7e9fb";
   const worstTok = shortNameFor(priciest.tokenizer);
+  const countStart = max.toFixed(2);
 
   return `
     <section class="sect sect-tax reveal" aria-labelledby="tax-label">
@@ -38,7 +61,7 @@ export function renderHero(data) {
       <div class="hero-grid">
         <div class="hero-metric">
           <p class="hero-ratio" aria-label="Up to ${fmtRatio(max, 2)} times more tokens than English">
-            <span class="hero-ratio-val" data-count-to="${max.toFixed(4)}" data-count-suffix="×">${fmtRatio(max, 2)}</span>
+            <span class="hero-ratio-val" data-count-to="${max.toFixed(4)}" data-count-suffix="×">${countStart}×</span>
           </p>
           <p class="hero-range muted">Across seven tokenizers on FLORES-200: <strong class="num">${fmtRatio(min, 2)}–${fmtRatio(max, 2)}</strong></p>
         </div>
@@ -55,10 +78,9 @@ export function renderHero(data) {
           </ul>
         </div>
       </div>
-      <figure class="hero-strip" id="hero-strip" aria-labelledby="strip-caption">
-        <figcaption id="strip-caption" class="visually-hidden">One FLORES sentence pair tokenized with o200k_base: Indonesian uses more tokens than English.</figcaption>
+      <div class="hero-strip" id="hero-strip" aria-live="polite">
         <p class="strip-loading muted" id="strip-status">Loading token strip…</p>
-      </figure>
+      </div>
     </section>`;
 }
 
@@ -69,23 +91,21 @@ export async function mountHeroStrip() {
   try {
     const res = await fetch("hero-strip.json");
     const data = await res.json();
-    const enBlocks = renderTokenBlocks(data.en_pieces, "en");
-    const idBlocks = renderTokenBlocks(data.id_pieces, "id");
-    wrap.innerHTML = `
-      <div class="strip-row">
-        <span class="strip-lang">EN</span>
-        <span class="strip-text muted">${escapeHtml(data.en_text)}</span>
-        <span class="strip-count num mono">${data.en_count}</span>
-      </div>
-      <div class="strip-blocks strip-blocks-en" aria-hidden="true">${enBlocks}</div>
-      <div class="strip-row">
-        <span class="strip-lang">ID</span>
-        <span class="strip-text muted">${escapeHtml(data.id_text)}</span>
-        <span class="strip-count num mono">${data.id_count}</span>
-      </div>
-      <div class="strip-blocks strip-blocks-id" aria-hidden="true">${idBlocks}</div>
-      <p class="strip-note muted small">o200k_base · <code>add_special_tokens=false</code> · first FLORES devtest pair</p>`;
+    const strips = data.strips ?? [
+      {
+        short_name: data.source?.tokenizer ?? "o200k_base",
+        en_pieces: data.en_pieces,
+        id_pieces: data.id_pieces,
+        en_count: data.en_count,
+        id_count: data.id_count,
+      },
+    ];
+    const pairIndex = data.source?.pair_index ?? data.pair_index ?? 0;
+    wrap.innerHTML = strips
+      .map((s) => renderStripFigure(s, pairIndex, data.id_text, data.en_text))
+      .join("");
   } catch {
     if (status) status.textContent = "Token strip unavailable (run prebuild).";
+    else wrap.innerHTML = `<p class="muted">Token strip unavailable (run prebuild).</p>`;
   }
 }
