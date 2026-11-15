@@ -274,7 +274,7 @@ svg.chart {
 }
 .chart-mobile-svg {
   width: 100%;
-  max-width: 360px;
+  max-width: 388px;
   height: auto;
 }
 .chart-mobile-name,
@@ -333,9 +333,22 @@ svg.chart {
   outline-offset: 2px;
 }
 @media (max-width: 639px) {
-  .table-scroll {
-    mask-image: linear-gradient(to right, black 92%, transparent);
-    -webkit-mask-image: linear-gradient(to right, black 92%, transparent);
+  .table-scroll.is-overflowing {
+    mask-image: linear-gradient(to right, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, black 90%, transparent);
+    padding-right: 20px;
+  }
+  .board-table th:last-child,
+  .board-table td:last-child,
+  .calc-table th:last-child,
+  .calc-table td:last-child {
+    padding-right: 12px;
+  }
+  .table-scroll.is-overflowing .board-table th:last-child,
+  .table-scroll.is-overflowing .board-table td:last-child,
+  .table-scroll.is-overflowing .calc-table th:last-child,
+  .table-scroll.is-overflowing .calc-table td:last-child {
+    padding-right: 28px;
   }
 }
 .board-table .ci-cell {

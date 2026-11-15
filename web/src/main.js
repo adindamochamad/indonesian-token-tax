@@ -19,6 +19,7 @@ import {
   renderRankedList,
   renderDetailRow,
 } from "./try.js";
+import { updateTableScrollFades } from "./table-scroll.js";
 import "./styles.css";
 
 const state = {
@@ -42,6 +43,7 @@ async function boot() {
   bindTryCounters();
   bindExampleChips();
   paintLeaderboard();
+  window.addEventListener("resize", () => updateTableScrollFades());
   await mountHeroStrip();
   initMotion();
 
@@ -101,6 +103,7 @@ function paintLeaderboard() {
   document.getElementById("calculator").innerHTML = renderCalculator(rows);
   const input = document.getElementById("en-tokens");
   if (input) updateCalculator();
+  requestAnimationFrame(() => updateTableScrollFades());
 }
 
 async function getRuntime() {

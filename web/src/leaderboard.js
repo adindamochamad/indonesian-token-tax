@@ -110,20 +110,25 @@ function renderChartDesktop(rows, { minTok, maxTok }) {
 }
 
 function renderChartMobile(rows, uniqueMin, uniqueMax) {
-  const width = 360;
   const pad = 8;
+  const rightMargin = 28;
+  const width = 360 + rightMargin;
   const top = 52;
   const rowH = 56;
   const whiskerY = 38;
   const labelY = 16;
   const height = top + rows.length * rowH + 16;
-  const plotW = width - pad * 2;
+  const plotW = width - pad - rightMargin;
   const maxX = 2.0;
   const x = (v) => pad + (Math.min(maxX, Math.max(0, v)) / maxX) * plotW;
+  const plotRight = pad + plotW;
 
   const ticks = TICKS.map((t) => {
     const px = x(t);
-    return `<text class="chart-tick chart-tick-mobile" x="${px}" y="22" text-anchor="middle">${t.toFixed(2)}</text>
+    const isMax = t === maxX;
+    const tx = isMax ? plotRight : px;
+    const anchor = isMax ? "end" : "middle";
+    return `<text class="chart-tick chart-tick-mobile" x="${tx}" y="22" text-anchor="${anchor}">${t.toFixed(2)}</text>
       <line class="chart-grid" x1="${px}" x2="${px}" y1="28" y2="${height - 8}"/>`;
   }).join("");
 
@@ -144,7 +149,7 @@ function renderChartMobile(rows, uniqueMin, uniqueMax) {
       return `<g class="${rowClass}" tabindex="0" role="graphics-symbol" aria-label="${escapeHtml(tip)}">
         <title>${escapeHtml(tip)}</title>
         <text class="chart-mobile-name" x="${pad}" y="${rowTop + labelY}">${escapeHtml(row.shortName)}</text>
-        <text class="chart-mobile-value num" x="${width - pad}" y="${rowTop + labelY}" text-anchor="end">${fmtRatio(row.displayRatio, 2)}</text>
+        <text class="chart-mobile-value num" x="${plotRight}" y="${rowTop + labelY}" text-anchor="end">${fmtRatio(row.displayRatio, 2)}</text>
         <line x1="${lo}" x2="${hi}" y1="${cy}" y2="${cy}" class="chart-whisker"/>
         <line x1="${lo}" x2="${lo}" y1="${cy - 5}" y2="${cy + 5}" class="chart-cap"/>
         <line x1="${hi}" x2="${hi}" y1="${cy - 5}" y2="${cy + 5}" class="chart-cap"/>
