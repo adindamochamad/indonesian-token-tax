@@ -1,22 +1,12 @@
----
-title: Indonesian Token Tax
-emoji: 📊
-colorFrom: green
-colorTo: blue
-sdk: static
-app_build_command: cd web && npm ci && npm run build
-app_file: web/dist/index.html
-pinned: false
-license: apache-2.0
----
-
 # Indonesian Token Tax
+
+Live demo: https://adindamochamad.github.io/indonesian-token-tax/
 
 How many more tokens Indonesian (`id`) costs than English (`en`) on popular LLM tokenizers.
 
 This is a **token-count** comparison on parallel sentences. It is not a quality ranking, not a price table, and not a claim about which model is “better at Indonesian.”
 
-A Space (or `python app.py`) download fetches **tokenizer files only**, no model weights. The leaderboard reads committed `results/` files; tokenizers load on the first **Tokenize** click.
+Downloading tokenizers fetches **tokenizer files only**, no model weights. The leaderboard reads committed `results/` files; tokenizers load on the first **Tokenize** click.
 
 ## Key findings
 
@@ -118,6 +108,8 @@ cd web
 npm ci
 npm run build
 ```
+
+`web/public/hero-strip.json` is committed. Rebuild it only when needed: `cd web && npm run hero-strip` or `python scripts/export_hero_strip.py`.
 
 Parity with Python on 50 FLORES Indonesian + 50 English sentences (exact token counts, `add_special_tokens=false`): **7/7 match**.
 
