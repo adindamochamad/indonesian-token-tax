@@ -68,6 +68,10 @@ await pageEn.evaluate(() => {
 await pageEn.reload({ waitUntil: "networkidle" });
 await pageEn.locator("#board-chart .chart-wrap.chart-mobile").waitFor({ state: "visible" });
 await pageEn.locator(".chart-wrap.chart-desktop").waitFor({ state: "hidden" });
+await pageEn.screenshot({
+  path: resolve(outDir, "redesign2-375-light-top-en.png"),
+  fullPage: true,
+});
 console.log("ok 375 mobile chart EN");
 await pageEn.close();
 

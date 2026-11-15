@@ -200,12 +200,12 @@ h1, h2, h3, .h2, .h3 {
 
 .chart-label-sub {
   fill: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .chart-mobile-tech {
   fill: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .skip-link {
@@ -426,16 +426,11 @@ svg.chart {
   max-width: none;
   height: auto;
   display: block;
+  overflow: visible;
 }
 .chart-mobile-name,
 .chart-mobile-value {
   fill: var(--ink);
-  font-size: 12px;
-}
-.chart-tick-mobile {
-  font-size: 12px;
-}
-.chart-parity-mobile {
   font-size: 12px;
 }
 .chart-mobile-row.accent-cheapest .chart-mobile-name,
@@ -456,11 +451,12 @@ svg.chart {
 .chart-mobile-row.accent-priciest .chart-cap { stroke: var(--accent); }
 @media (max-width: 639px) {
   .chart-wrap.chart-desktop { display: none !important; }
-  .chart-wrap.chart-mobile { display: block; width: 100%; }
+  .chart-wrap.chart-mobile { display: block; width: 100%; overflow: visible; }
   .col-hide-sm { display: none; }
 }
 .chart-grid { stroke: var(--line); stroke-width: 1; }
-.chart-tick { fill: var(--muted); font-size: 11px; font-family: "Geist Mono", ui-monospace, monospace; }
+.chart-tick { fill: var(--muted); font-size: 12px; font-family: "Geist Mono", ui-monospace, monospace; }
+.chart-tick-mobile { font-size: 12px; }
 .chart-label { fill: var(--ink); font-size: 12px; }
 .chart-value { fill: var(--muted); font-size: 12px; }
 .chart-whisker, .chart-cap { stroke: var(--muted); stroke-width: 1.5; }
@@ -471,7 +467,8 @@ svg.chart {
 .chart-row-accent .chart-label,
 .chart-row-accent .chart-value { fill: var(--accent); font-weight: 600; }
 .chart-parity { stroke: var(--muted); opacity: 0.7; }
-.chart-parity-label { fill: var(--muted); font-size: 10px; }
+.chart-parity-label { fill: var(--muted); font-size: 12px; }
+.chart-parity-mobile { font-size: 12px; }
 
 .table-scroll {
   overflow-x: auto;

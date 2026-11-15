@@ -138,7 +138,7 @@ function renderChartDesktop(rows, { minTok, maxTok }) {
 }
 
 function renderChartMobile(rows, uniqueMin, uniqueMax) {
-  const pad = 8;
+  const pad = 24;
   const rightMargin = 40;
   const width = 360 + rightMargin;
   const top = 56;
