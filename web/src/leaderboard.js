@@ -1,5 +1,6 @@
 import { fmt, fmtRatio, fmtInt, escapeHtml } from "./format.js";
 import { shortNameFor, revisionFor } from "./specs.js";
+import { leaderboardAccentTokenizers, rowAccentClass, uniqueExtremeRatios } from "./accent.js";
 
 const SLICE_CAVEATS = {
   flores: "Formal, professionally translated news-like text (FLORES-200 devtest).",
@@ -42,7 +43,18 @@ export function sliceCaveat(sliceKey) {
   return SLICE_CAVEATS[sliceKey] ?? "";
 }
 
-export function renderChart(rows) {
+function rowTip(row) {
+  return [
+    row.tokenizer,
+    `revision ${row.revision}`,
+    `ratio ${fmtRatio(row.displayRatio, 2)}`,
+    `CI ${fmt(row.displayLo, 3)}–${fmt(row.displayHi, 3)}`,
+    `word ratio ${fmt(row.displayWord, 3)}`,
+    `extra / 1M EN ${fmtInt(row.displayExtra)}`,
+  ].join(" · ");
+}
+
+function renderChartDesktop(rows, { minTok, maxTok }) {
   const width = 920;
   const rowH = 44;
   const left = 8;
@@ -55,8 +67,6 @@ export function renderChart(rows) {
   const plotW = width - plotLeft - right;
   const maxX = 2.0;
   const x = (v) => plotLeft + (Math.min(maxX, Math.max(0, v)) / maxX) * plotW;
-  const bestTok = rows[0]?.tokenizer;
-  const worstTok = rows[rows.length - 1]?.tokenizer;
 
   const grid = TICKS.map((t) => {
     const px = x(t);
@@ -71,16 +81,10 @@ export function renderChart(rows) {
       const lo = x(row.displayLo);
       const hi = x(row.displayHi);
       const dot = x(row.displayRatio);
-      const accent = row.tokenizer === bestTok || row.tokenizer === worstTok;
+      const accent =
+        row.tokenizer === minTok || row.tokenizer === maxTok;
       const rowClass = accent ? "chart-row chart-row-accent" : "chart-row";
-      const tip = [
-        row.tokenizer,
-        `revision ${row.revision}`,
-        `ratio ${fmtRatio(row.displayRatio, 2)}`,
-        `CI ${fmt(row.displayLo, 3)}–${fmt(row.displayHi, 3)}`,
-        `word ratio ${fmt(row.displayWord, 3)}`,
-        `extra / 1M EN ${fmtInt(row.displayExtra)}`,
-      ].join(" · ");
+      const tip = rowTip(row);
       return `<g class="${rowClass}" tabindex="0" role="graphics-symbol" aria-label="${escapeHtml(tip)}">
         <title>${escapeHtml(tip)}</title>
         <text class="chart-label" x="${plotLeft - 10}" y="${cy + 4}" text-anchor="end">${escapeHtml(row.shortName)}</text>
@@ -93,7 +97,7 @@ export function renderChart(rows) {
     })
     .join("");
 
-  return `<figure class="chart-wrap">
+  return `<figure class="chart-wrap chart-desktop">
     <svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="chart-title chart-desc">
       <title id="chart-title">Indonesian over English token ratio by tokenizer</title>
       <desc id="chart-desc">Dot-and-whisker plot with 95% confidence intervals. Dashed line at 1.0 is same as English.</desc>
@@ -102,15 +106,76 @@ export function renderChart(rows) {
       <text class="chart-parity-label" x="${parityX + 4}" y="${height - 10}">same as English</text>
       ${series}
     </svg>
-    <p class="sr-only">See the sortable table below for the same numbers.</p>
   </figure>`;
+}
+
+function renderChartMobile(rows, uniqueMin, uniqueMax) {
+  const width = 360;
+  const pad = 8;
+  const top = 52;
+  const rowH = 56;
+  const whiskerY = 38;
+  const labelY = 16;
+  const height = top + rows.length * rowH + 16;
+  const plotW = width - pad * 2;
+  const maxX = 2.0;
+  const x = (v) => pad + (Math.min(maxX, Math.max(0, v)) / maxX) * plotW;
+
+  const ticks = TICKS.map((t) => {
+    const px = x(t);
+    return `<text class="chart-tick chart-tick-mobile" x="${px}" y="22" text-anchor="middle">${t.toFixed(2)}</text>
+      <line class="chart-grid" x1="${px}" x2="${px}" y1="28" y2="${height - 8}"/>`;
+  }).join("");
+
+  const parityX = x(1);
+  const parity = `<line class="chart-parity" x1="${parityX}" x2="${parityX}" y1="28" y2="${height - 8}" stroke-dasharray="4 3"/>
+    <text class="chart-parity-label chart-parity-mobile" x="${parityX + 4}" y="40">same as English</text>`;
+
+  const series = rows
+    .map((row, i) => {
+      const rowTop = top + i * rowH;
+      const cy = rowTop + whiskerY;
+      const lo = x(row.displayLo);
+      const hi = x(row.displayHi);
+      const dot = x(row.displayRatio);
+      const accentClass = rowAccentClass(row.displayRatio, uniqueMin, uniqueMax);
+      const rowClass = accentClass ? `chart-mobile-row ${accentClass}` : "chart-mobile-row";
+      const tip = rowTip(row);
+      return `<g class="${rowClass}" tabindex="0" role="graphics-symbol" aria-label="${escapeHtml(tip)}">
+        <title>${escapeHtml(tip)}</title>
+        <text class="chart-mobile-name" x="${pad}" y="${rowTop + labelY}">${escapeHtml(row.shortName)}</text>
+        <text class="chart-mobile-value num" x="${width - pad}" y="${rowTop + labelY}" text-anchor="end">${fmtRatio(row.displayRatio, 2)}</text>
+        <line x1="${lo}" x2="${hi}" y1="${cy}" y2="${cy}" class="chart-whisker"/>
+        <line x1="${lo}" x2="${lo}" y1="${cy - 5}" y2="${cy + 5}" class="chart-cap"/>
+        <line x1="${hi}" x2="${hi}" y1="${cy - 5}" y2="${cy + 5}" class="chart-cap"/>
+        <circle class="chart-dot" cx="${dot}" cy="${cy}" r="4.5"/>
+      </g>`;
+    })
+    .join("");
+
+  return `<figure class="chart-wrap chart-mobile">
+    <svg class="chart chart-mobile-svg" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="chart-title-mobile chart-desc-mobile">
+      <title id="chart-title-mobile">Indonesian over English token ratio by tokenizer</title>
+      <desc id="chart-desc-mobile">Mobile dot-and-whisker plot, 1.0 to 2.0.</desc>
+      ${ticks}
+      ${parity}
+      ${series}
+    </svg>
+  </figure>`;
+}
+
+export function renderChart(rows) {
+  const accents = leaderboardAccentTokenizers(rows);
+  const { uniqueMin, uniqueMax } = uniqueExtremeRatios(rows, (r) => r.displayRatio);
+  return `${renderChartDesktop(rows, accents)}${renderChartMobile(rows, uniqueMin, uniqueMax)}
+    <p class="sr-only">See the sortable table below for the same numbers.</p>`;
 }
 
 const COLS = [
   { key: "shortName", label: "Tokenizer", num: false },
   { key: "displayRatio", label: "ID/EN tokens", num: true },
-  { key: "ci", label: "95% CI", num: true, sortKey: "displayLo" },
-  { key: "displayWord", label: "ID/EN words", num: true },
+  { key: "ci", label: "95% CI", num: true, sortKey: "displayLo", hideSm: true },
+  { key: "displayWord", label: "ID/EN words", num: true, hideSm: true },
   { key: "displayExtra", label: "Extra per 1M EN tokens", num: true },
 ];
 
@@ -125,28 +190,27 @@ export function renderTable(rows, sort) {
       return String(av).localeCompare(String(bv)) * dir;
     });
   }
-  const bestTok = rows[0]?.tokenizer;
-  const worstTok = rows[rows.length - 1]?.tokenizer;
-  const head = COLS.map(
-    (c) =>
-      `<th scope="col" class="${c.num ? "num" : ""}" data-sort="${c.sortKey ?? c.key}">${c.label}<span class="sort" aria-hidden="true"></span></th>`,
-  ).join("");
+  const { minTok, maxTok } = leaderboardAccentTokenizers(rows);
+  const head = COLS.map((c) => {
+    const sm = c.hideSm ? " col-hide-sm" : "";
+    return `<th scope="col" class="${c.num ? "num" : ""}${sm}" data-sort="${c.sortKey ?? c.key}">${c.label}<span class="sort" aria-hidden="true"></span></th>`;
+  }).join("");
   const body = sorted
     .map((row) => {
       const tier =
-        row.tokenizer === bestTok ? "best" : row.tokenizer === worstTok ? "worst" : "";
+        row.tokenizer === minTok ? "best" : row.tokenizer === maxTok ? "worst" : "";
       const ci = `${fmt(row.displayLo, 3)}–${fmt(row.displayHi, 3)}`;
       const title = `${row.tokenizer} @ ${row.revision}`;
       return `<tr class="${tier}" data-tok="${escapeHtml(row.tokenizer)}">
       <td title="${escapeHtml(title)}"><strong>${escapeHtml(row.shortName)}</strong></td>
       <td class="num" data-label="ID/EN tokens">${fmtRatio(row.displayRatio, 2)}</td>
-      <td class="num" data-label="95% CI">${ci}</td>
-      <td class="num" data-label="ID/EN words">${fmt(row.displayWord, 3)}</td>
+      <td class="num ci-cell col-hide-sm" data-label="95% CI">${ci}</td>
+      <td class="num col-hide-sm" data-label="ID/EN words">${fmt(row.displayWord, 3)}</td>
       <td class="num" data-label="Extra / 1M EN">${fmtInt(row.displayExtra)}</td>
     </tr>`;
     })
     .join("");
-  return `<div class="table-scroll" role="region" aria-label="Tokenizer leaderboard table">
+  return `<div class="table-scroll" role="region" aria-label="Tokenizer leaderboard table" tabindex="0">
     <table class="board-table">
       <thead><tr>${head}</tr></thead>
       <tbody>${body}</tbody>

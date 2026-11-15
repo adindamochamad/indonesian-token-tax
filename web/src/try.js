@@ -1,5 +1,6 @@
 import { fmt, fmtRatio, wordCount } from "./format.js";
 import { shortNameFor } from "./specs.js";
+import { uniqueExtremeRatios, rowAccentClass } from "./accent.js";
 
 export const EXAMPLES = [
   {
@@ -95,24 +96,15 @@ export function renderComparisonRow(spec, idN, enN) {
   };
 }
 
-function accentTiers(sorted) {
-  const ratios = sorted.map((r) => r.ratio).filter((x) => x != null && Number.isFinite(x));
-  if (ratios.length === 0) return { accentMin: null, accentMax: null };
-  const accentMin = Math.min(...ratios);
-  const accentMax = Math.max(...ratios);
-  if (accentMin === accentMax) return { accentMin: null, accentMax: null };
-  return { accentMin, accentMax };
-}
-
 export function renderRankedList(rows, maxRatio) {
   const sorted = [...rows].sort((a, b) => (a.ratio ?? 0) - (b.ratio ?? 0));
-  const { accentMin, accentMax } = accentTiers(sorted);
+  const { uniqueMin, uniqueMax } = uniqueExtremeRatios(sorted, (r) => r.ratio);
   const items = sorted
     .map((r) => {
       const pct = r.ratio == null ? 0 : (r.ratio / maxRatio) * 100;
-      const atMin = accentMin != null && r.ratio === accentMin;
-      const atMax = accentMax != null && r.ratio === accentMax;
-      const tier = atMin ? "rank-best" : atMax ? "rank-worst" : "";
+      const accent = rowAccentClass(r.ratio, uniqueMin, uniqueMax);
+      const tier =
+        accent === "accent-cheapest" ? "rank-best" : accent === "accent-priciest" ? "rank-worst" : "";
       const nums = `ID ${r.idN} · EN ${r.enN ?? "—"} · ${r.ratio == null ? "—" : fmtRatio(r.ratio, 2)}`;
       return `<li class="rank-row ${tier}">
         <span class="rank-name">${r.shortName}</span>
