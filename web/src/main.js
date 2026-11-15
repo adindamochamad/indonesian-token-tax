@@ -3,7 +3,7 @@ import { sliceRows, renderChart, renderTable, renderMethodSliceTable } from "./l
 import { mountHeroEnhancements, mountHeroStrip, repaintStripsOnLang } from "./hero.js";
 import { initTheme } from "./theme.js";
 import { initMotion } from "./motion.js";
-import { initLang, t } from "./i18n.js";
+import { initLang, t, updateThemeToggleLabel } from "./i18n.js";
 import {
   bindExampleChips,
   bindTryCounters,
@@ -55,11 +55,7 @@ async function boot() {
     repaintStripsOnLang();
     paintMethodSlices();
     if (state.lastTry) paintTryResults(state.lastTry);
-    const themeBtn = document.getElementById("theme-toggle");
-    if (themeBtn) {
-      const dark = document.documentElement.dataset.theme === "dark";
-      themeBtn.textContent = dark ? t("themeLight") : t("themeDark");
-    }
+    updateThemeToggleLabel();
   });
 
   const params = new URLSearchParams(location.search);

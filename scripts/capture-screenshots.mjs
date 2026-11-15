@@ -45,9 +45,30 @@ for (const s of shots) {
   } else if (s.where === "top") {
     await page.evaluate(() => window.scrollTo(0, 0));
   }
+  if (s.w === 375 && s.where === "top") {
+  await page.locator("#board-chart .chart-wrap.chart-mobile").waitFor({ state: "visible", timeout: 15000 });
+    const mobileW = await page.locator("#board-chart .chart-mobile-svg").boundingBox();
+    if (!mobileW || mobileW.width < 300) {
+      throw new Error(`375 mobile chart too narrow (${mobileW?.width ?? 0}px)`);
+    }
+  }
   const name = `redesign2-${s.w}-${s.theme}-${s.where}.png`;
   await page.screenshot({ path: resolve(outDir, name), fullPage: true });
   console.log("wrote", name);
   await page.close();
 }
+// EN chart check at 375
+const pageEn = await browser.newPage({ viewport: { width: 375, height: 900 } });
+await pageEn.emulateMedia({ reducedMotion: "reduce" });
+await pageEn.goto(`${previewOrigin}/?theme=light`, { waitUntil: "networkidle", timeout: 60000 });
+await pageEn.evaluate(() => {
+  localStorage.setItem("itt-lang", "en");
+  document.documentElement.lang = "en";
+});
+await pageEn.reload({ waitUntil: "networkidle" });
+await pageEn.locator("#board-chart .chart-wrap.chart-mobile").waitFor({ state: "visible" });
+await pageEn.locator(".chart-wrap.chart-desktop").waitFor({ state: "hidden" });
+console.log("ok 375 mobile chart EN");
+await pageEn.close();
+
 await browser.close();

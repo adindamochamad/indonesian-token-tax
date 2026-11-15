@@ -1,4 +1,4 @@
-import { fmt, fmtRatio, fmtCount, escapeHtml } from "./format.js";
+import { fmt, fmtRatio, fmtCount, fmtAxisTick, escapeHtml } from "./format.js";
 import { productNameFor, technicalIdFor, revisionFor } from "./specs.js";
 import { leaderboardAccentTokenizers, rowAccentClass, uniqueExtremeRatios } from "./accent.js";
 import { getLang, t } from "./i18n.js";
@@ -95,7 +95,7 @@ function renderChartDesktop(rows, { minTok, maxTok }) {
   const grid = TICKS.map((tick) => {
     const px = x(tick);
     return `<line class="chart-grid" x1="${px}" x2="${px}" y1="${top - 4}" y2="${height - bottom}" />
-      <text class="chart-tick" x="${px}" y="${top - 14}" text-anchor="middle">${tick.toFixed(2)}</text>`;
+      <text class="chart-tick" x="${px}" y="${top - 14}" text-anchor="middle">${fmtAxisTick(tick)}</text>`;
   }).join("");
 
   const parityX = x(1);
@@ -139,7 +139,7 @@ function renderChartDesktop(rows, { minTok, maxTok }) {
 
 function renderChartMobile(rows, uniqueMin, uniqueMax) {
   const pad = 8;
-  const rightMargin = 32;
+  const rightMargin = 40;
   const width = 360 + rightMargin;
   const top = 56;
   const rowH = 62;
@@ -155,7 +155,7 @@ function renderChartMobile(rows, uniqueMin, uniqueMax) {
     const isMax = tick === AXIS_MAX;
     const tx = isMax ? plotRight : px;
     const anchor = isMax ? "end" : "middle";
-    return `<text class="chart-tick chart-tick-mobile" x="${tx}" y="24" text-anchor="${anchor}">${tick.toFixed(2)}</text>
+    return `<text class="chart-tick chart-tick-mobile" x="${tx}" y="24" text-anchor="${anchor}">${fmtAxisTick(tick)}</text>
       <line class="chart-grid" x1="${px}" x2="${px}" y1="32" y2="${height - 8}"/>`;
   }).join("");
 

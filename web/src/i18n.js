@@ -1,3 +1,5 @@
+import { clearNumberFormatCache } from "./format.js";
+
 const KEY = "itt-lang";
 
 let currentLang = "id";
@@ -26,6 +28,8 @@ const STRINGS = {
   siteTitle: { id: "Pajak token bahasa Indonesia", en: "Indonesian Token Tax" },
   themeDark: { id: "Mode gelap", en: "Dark mode" },
   themeLight: { id: "Mode terang", en: "Light mode" },
+  themeDarkAria: { id: "Mode gelap", en: "Dark mode" },
+  themeLightAria: { id: "Mode terang", en: "Light mode" },
   langId: { id: "ID", en: "ID" },
   langEn: { id: "EN", en: "EN" },
   langToggleAria: {
@@ -52,8 +56,8 @@ const STRINGS = {
     en: "For the same meaning, you are billed for 25–84% more tokens.",
   },
   meaningExample: {
-    id: "1.000 token bahasa Inggris makna ≈ {idTokens} token Indonesia di ChatGPT (GPT-4o).",
-    en: "1,000 English tokens of meaning ≈ {idTokens} Indonesian tokens on ChatGPT (GPT-4o).",
+    id: "Teks yang butuh {enTokens} token dalam bahasa Inggris butuh sekitar {idTokens} token dalam bahasa Indonesia di ChatGPT (GPT-4o).",
+    en: "Text that needs {enTokens} tokens in English needs about {idTokens} tokens in Indonesian on ChatGPT (GPT-4o).",
   },
   meaningTableCaption: {
     id: "Token Indonesia per 1.000 token bahasa Inggris (makna sama)",
@@ -227,9 +231,18 @@ function applyMeta(lang) {
   if (twD) twD.setAttribute("content", m.twitterDescription);
 }
 
+export function updateThemeToggleLabel() {
+  const btn = document.getElementById("theme-toggle");
+  if (!btn) return;
+  const dark = document.documentElement.dataset.theme === "dark";
+  btn.setAttribute("aria-label", dark ? t("themeLightAria") : t("themeDarkAria"));
+  btn.setAttribute("aria-pressed", String(dark));
+}
+
 export function applyLang(lang) {
   currentLang = lang === "en" ? "en" : "id";
   document.documentElement.lang = currentLang;
+  clearNumberFormatCache();
   applyMeta(currentLang);
 
   document.querySelectorAll("[data-i18n]").forEach((el) => {
@@ -250,11 +263,7 @@ export function applyLang(lang) {
     if (key) el.innerHTML = t(key);
   });
 
-  const themeBtn = document.getElementById("theme-toggle");
-  if (themeBtn) {
-    const dark = document.documentElement.dataset.theme === "dark";
-    themeBtn.textContent = dark ? t("themeLight") : t("themeDark");
-  }
+  updateThemeToggleLabel();
 
   const langBtn = document.getElementById("lang-toggle");
   if (langBtn) {
@@ -266,7 +275,11 @@ export function applyLang(lang) {
   if (heroVal) {
     heroVal.dataset.countLocale = currentLang;
     if (!document.documentElement.classList.contains("js-motion")) {
-      heroVal.textContent = currentLang === "id" ? "1,25×" : "1.25×";
+      const n = new Intl.NumberFormat(localeTag(), {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(1.2461);
+      heroVal.textContent = `${n}×`;
     }
   }
 

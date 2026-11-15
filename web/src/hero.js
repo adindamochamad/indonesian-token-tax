@@ -77,7 +77,10 @@ export function renderMeaningTable(data) {
     .join("");
   return `
     <p class="meaning-lead" data-i18n="meaningLead">${t("meaningLead")}</p>
-    <p class="meaning-example" id="meaning-example">${t("meaningExample", { idTokens: fmtCount(idAt1k) })}</p>
+    <p class="meaning-example" id="meaning-example">${t("meaningExample", {
+      enTokens: fmtCount(1000),
+      idTokens: fmtCount(idAt1k),
+    })}</p>
     <div class="table-scroll">
       <table class="meaning-table" aria-labelledby="meaning-table-caption">
         <caption id="meaning-table-caption" class="sr-only">${t("meaningTableCaption")}</caption>

@@ -1,3 +1,5 @@
+import { fmtRatio } from "./format.js";
+
 /** Section reveal + hero count-up; content visible unless html.js-motion is set. */
 export function initMotion() {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -30,7 +32,6 @@ export function initMotion() {
   const heroNum = document.querySelector("[data-count-to]");
   if (heroNum) {
     const target = Number(heroNum.dataset.countTo);
-    const suffix = heroNum.dataset.countSuffix ?? "";
     const duration = 1800;
     const start = performance.now();
     const from = 1.0;
@@ -38,8 +39,7 @@ export function initMotion() {
       const t = Math.min(1, (now - start) / duration);
       const eased = 1 - (1 - t) ** 3;
       const val = from + (target - from) * eased;
-      const display = heroNum.dataset.countLocale === "id" ? val.toFixed(2).replace(".", ",") : val.toFixed(2);
-      heroNum.textContent = `${display}${suffix}`;
+      heroNum.textContent = fmtRatio(val, 2);
       if (t < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
